@@ -28,7 +28,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
   });
   const { fields, append, remove, move } = useFieldArray({ control, name: "announcements" });
   const banners = useWatch({ control, name: "announcements" }) ?? [];
-  const { fields: navFields, move: moveNav } = useFieldArray({ control, name: "navItems" });
+  const { fields: navFields, move: moveNav, append: appendNav, remove: removeNav } = useFieldArray({ control, name: "navItems" });
   const navItems = useWatch({ control, name: "navItems" }) ?? [];
 
   return (
@@ -130,35 +130,61 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
           {t.navigationHint}
         </p>
         <div className="space-y-2">
-          {navFields.map((field, i) => {
-            const item = navItems[i] ?? field;
-            return (
-              <motion.div
-                key={field.id}
-                layout
-                className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#121212] px-4 py-3"
-              >
-                <span className={`size-2 rounded-full shrink-0 ${item.visible ? "bg-brand" : "bg-white/20"}`} />
-                <span className="flex-1 text-sm font-medium">
-                  {item.label}
-                  <span className="ml-2 text-xs text-white/35">{item.href}</span>
-                </span>
-                <div className="flex items-center gap-1">
-                  <IconBtn label={admin.common.moveUp} disabled={i === 0} onClick={() => moveNav(i, i - 1)}>
-                    <ArrowUpIcon className="size-4" />
-                  </IconBtn>
-                  <IconBtn label={admin.common.moveDown} disabled={i === navFields.length - 1} onClick={() => moveNav(i, i + 1)}>
-                    <ArrowDownIcon className="size-4" />
-                  </IconBtn>
-                  <label className="grid size-8 cursor-pointer place-items-center rounded-md border border-white/10 text-white/60 transition hover:text-white">
-                    <input type="checkbox" className="sr-only" {...register(`navItems.${i}.visible`)} />
-                    {item.visible ? <EyeIcon className="size-4" /> : <EyeOffIcon className="size-4 opacity-40" />}
-                  </label>
-                </div>
-              </motion.div>
-            );
-          })}
+          <AnimatePresence initial={false}>
+            {navFields.map((field, i) => {
+              const item = navItems[i] ?? field;
+              const e = errors.navItems?.[i];
+              return (
+                <motion.div
+                  key={field.id}
+                  layout
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className={`grid items-start gap-2 rounded-lg border border-white/10 bg-[#121212] p-3 sm:grid-cols-[1fr_1fr_auto] ${item.visible ? "" : "opacity-60"}`}
+                >
+                  <Field label={t.navLabel} error={e?.label?.message}>
+                    <input {...register(`navItems.${i}.label`)} className={inputCls} aria-invalid={!!e?.label} />
+                  </Field>
+                  <Field
+                    label={t.navHref}
+                    hint={item.href === "/products" ? t.navMegaMenu : t.navHrefHint}
+                    error={e?.href?.message}
+                  >
+                    <input {...register(`navItems.${i}.href`)} className={`${inputCls} font-mono text-xs`} aria-invalid={!!e?.href} />
+                  </Field>
+                  <div className="flex items-center gap-1 sm:pt-[22px]">
+                    <label
+                      title={item.visible ? t.navVisible : t.navHidden}
+                      className="grid size-8 cursor-pointer place-items-center rounded-md border border-white/10 text-white/60 transition hover:text-white"
+                    >
+                      <input type="checkbox" className="sr-only" {...register(`navItems.${i}.visible`)} />
+                      {item.visible ? <EyeIcon className="size-4" /> : <EyeOffIcon className="size-4 opacity-40" />}
+                    </label>
+                    <IconBtn label={admin.common.moveUp} disabled={i === 0} onClick={() => moveNav(i, i - 1)}>
+                      <ArrowUpIcon className="size-4" />
+                    </IconBtn>
+                    <IconBtn label={admin.common.moveDown} disabled={i === navFields.length - 1} onClick={() => moveNav(i, i + 1)}>
+                      <ArrowDownIcon className="size-4" />
+                    </IconBtn>
+                    <IconBtn label={admin.common.remove} danger disabled={navFields.length <= 1} onClick={() => removeNav(i)}>
+                      <Trash2Icon className="size-4" />
+                    </IconBtn>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
+        {navFields.length < 20 && (
+          <button
+            type="button"
+            onClick={() => appendNav({ ...t.newNav, visible: true })}
+            className="inline-flex h-10 w-fit items-center gap-2 rounded-md border border-dashed border-white/20 px-4 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
+          >
+            <PlusIcon className="size-4" /> {t.addNav}
+          </button>
+        )}
       </Section>
 
       <Section title={t.footer}>

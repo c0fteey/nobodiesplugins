@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { accounts, discordRoleRules, discordSettings, discordSyncLog, orderItems, orders } from "@/db/schema";
+import { accounts, discordRoleRules, discordSettings, discordSyncLog, orderItems, orders, users } from "@/db/schema";
 import { admin } from "@/lang/admin";
 
 const m = admin.discord.sync;
@@ -155,19 +155,20 @@ export async function syncDiscordMember(userId: string): Promise<SyncResult> {
   const discordId = account.providerAccountId;
 
   try {
-    const [rules, owned] = await Promise.all([
+    const [rules, owned, user] = await Promise.all([
       db.select().from(discordRoleRules),
       db
         .selectDistinct({ productId: orderItems.productId })
         .from(orderItems)
         .innerJoin(orders, eq(orders.id, orderItems.orderId))
         .where(and(eq(orders.userId, userId), eq(orders.status, "completed"))),
+      db.query.users.findFirst({ where: eq(users.id, userId), columns: { role: true } }),
     ]);
     const ownedIds = new Set(owned.map((o) => o.productId));
     const managed = new Set(rules.map((r) => r.roleId));
-    const wanted = new Set(
-      rules.filter((r) => (r.productId === null ? ownedIds.size > 0 : ownedIds.has(r.productId))).map((r) => r.roleId),
-    );
+    const matches = (r: (typeof rules)[number]) =>
+      r.productId ? ownedIds.has(r.productId) : r.siteRole ? user?.role === r.siteRole : ownedIds.size > 0;
+    const wanted = new Set(rules.filter(matches).map((r) => r.roleId));
 
     let member: ApiMember | null = null;
     try {

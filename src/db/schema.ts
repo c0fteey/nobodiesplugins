@@ -28,6 +28,9 @@ export const roles = pgTable("role", {
   name: text("name").notNull(),
   color: text("color").notNull().default("#a1a1aa"),
   system: boolean("system").notNull().default(false),
+  // Set = auto role: given once a buyer's completed orders reach this total (0 = any order).
+  // The highest threshold reached wins; admins and manually given custom roles are never touched.
+  minSpendCents: integer("min_spend_cents"),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: createdAt(),
 });
@@ -357,12 +360,14 @@ export const discordSettings = pgTable("discord_settings", {
   updatedAt: timestamp("updated_at", { mode: "date" }).defaultNow().notNull(),
 });
 
-// "Owning this product gives that role"; productId null = any completed purchase
+// Condition -> Discord role. productId: owns that product; siteRole: has that site role;
+// neither: any completed purchase ("every customer")
 export const discordRoleRules = pgTable(
   "discord_role_rule",
   {
     id: id(),
     productId: text("product_id").references(() => products.id, { onDelete: "cascade" }),
+    siteRole: text("site_role").references(() => roles.key, { onDelete: "cascade", onUpdate: "cascade" }),
     roleId: text("role_id").notNull(),
     createdAt: createdAt(),
   },

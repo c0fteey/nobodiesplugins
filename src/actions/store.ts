@@ -9,6 +9,7 @@ import { contactMessages, couponRedemptions, licenses, orderItems, orders, produ
 import { getActionUser } from "@/lib/auth-guard";
 import { getOwnedProductIds } from "@/lib/data/account";
 import { syncDiscordMember } from "@/lib/discord";
+import { syncUserRole } from "@/lib/role-sync";
 import { consumeCoupon, priceCart } from "@/lib/promotions";
 import { checkoutSchema, contactSchema } from "@/lib/validations/store";
 import { site } from "@/lang/site";
@@ -138,6 +139,8 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
     throw error;
   }
 
+  // Spend thresholds may promote the buyer (e.g. Müşteri -> Premium Müşteri)
+  await syncUserRole(user.id);
   revalidatePath("/dashboard", "layout");
   // Hand out Discord roles for the new products once the response is sent
   after(() => syncDiscordMember(user.id));

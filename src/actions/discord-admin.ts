@@ -34,8 +34,10 @@ export async function saveDiscordSettingsAction(input: unknown): Promise<AdminRe
   return { ok: true };
 }
 
+// At most one condition: a product, a site role, or neither ("every customer")
 const ruleSchema = z.object({
   productId: z.uuid().nullable(),
+  siteRole: z.string().min(1).max(40).nullable().default(null),
   roleId: snowflake,
 });
 
@@ -43,15 +45,21 @@ export async function addDiscordRuleAction(input: unknown): Promise<AdminResult>
   await assertAdmin();
   const parsed = ruleSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? e.invalidData };
-  const { productId, roleId } = parsed.data;
+  const { roleId } = parsed.data;
+  const productId = parsed.data.productId;
+  const siteRole = productId ? null : parsed.data.siteRole;
 
   const clash = await db.query.discordRoleRules.findFirst({
-    where: and(eq(discordRoleRules.roleId, roleId), productId ? eq(discordRoleRules.productId, productId) : isNull(discordRoleRules.productId)),
+    where: and(
+      eq(discordRoleRules.roleId, roleId),
+      productId ? eq(discordRoleRules.productId, productId) : isNull(discordRoleRules.productId),
+      siteRole ? eq(discordRoleRules.siteRole, siteRole) : isNull(discordRoleRules.siteRole),
+    ),
     columns: { id: true },
   });
   if (clash) return { ok: false, error: e.ruleExists };
 
-  await db.insert(discordRoleRules).values({ productId, roleId });
+  await db.insert(discordRoleRules).values({ productId, siteRole, roleId });
   revalidatePath("/admin/discord");
   return { ok: true };
 }

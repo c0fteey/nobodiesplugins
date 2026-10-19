@@ -27,7 +27,12 @@ export default async function AdminOrdersPage() {
             {orders.map(({ order, email, items }) => (
               <tr key={order.id} className="border-b border-white/5 last:border-0">
                 <td className={td}>{formatDate(order.createdAt)}</td>
-                <td className={`${td} font-mono text-xs text-white/60`}>#{order.id.slice(0, 8).toUpperCase()}</td>
+                <td className={`${td} font-mono text-xs text-white/60`}>
+                  #{order.id.slice(0, 8).toUpperCase()}
+                  {order.couponCode === "ADMIN-GRANT" && (
+                    <span className="mt-1 block w-fit rounded bg-brand/15 px-1.5 py-0.5 font-sans text-[10px] font-semibold text-brand-soft">{t.grant}</span>
+                  )}
+                </td>
                 <td className={td}>{email}</td>
                 <td className={`${td} text-white/70`}>{items.join(", ")}</td>
                 <td className={`${td} text-success`}>{order.discountCents ? `−${formatPrice(order.discountCents)}` : "—"}</td>

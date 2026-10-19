@@ -14,6 +14,7 @@ import {
   orders,
   partners,
   products,
+  roles,
   settings,
   users,
 } from "@/db/schema";
@@ -101,11 +102,30 @@ export async function getUsers() {
     .orderBy(desc(users.createdAt));
 }
 
+/** userId -> ids of products they own (completed or not), for the admin "products" dialog. */
+export async function getOwnership() {
+  const rows = await db
+    .selectDistinct({ userId: orders.userId, productId: orderItems.productId })
+    .from(orderItems)
+    .innerJoin(orders, eq(orders.id, orderItems.orderId));
+  const map = new Map<string, string[]>();
+  for (const r of rows) map.set(r.userId, [...(map.get(r.userId) ?? []), r.productId]);
+  return map;
+}
+
 export async function getDiscordRules() {
   return db
-    .select({ id: discordRoleRules.id, roleId: discordRoleRules.roleId, productId: discordRoleRules.productId, productName: products.name })
+    .select({
+      id: discordRoleRules.id,
+      roleId: discordRoleRules.roleId,
+      productId: discordRoleRules.productId,
+      productName: products.name,
+      siteRole: discordRoleRules.siteRole,
+      siteRoleName: roles.name,
+    })
     .from(discordRoleRules)
     .leftJoin(products, eq(products.id, discordRoleRules.productId))
+    .leftJoin(roles, eq(roles.key, discordRoleRules.siteRole))
     .orderBy(asc(products.name), asc(discordRoleRules.createdAt));
 }
 

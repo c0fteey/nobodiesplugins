@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { CheckCircle2Icon, CircleAlertIcon, ExternalLinkIcon, Loader2Icon, PlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
+import { CheckCircle2Icon, CircleAlertIcon, ExternalLinkIcon, InfoIcon, Loader2Icon, PlusIcon, RefreshCwIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { AdminResult } from "@/actions/admin";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/actions/discord-admin";
 import type { GuildRole, GuildStatus } from "@/lib/discord";
 import { formatDate } from "@/lib/format";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import { Field, inputCls, Section, Toggle } from "./form-bits";
 import { td, th } from "./ui";
@@ -24,10 +25,20 @@ import { site } from "@/lang/site";
 const t = admin.discord;
 
 type Config = { guildId: string; enabled: boolean; autoJoin: boolean; removeRoles: boolean };
-type Rule = { id: string; roleId: string; productId: string | null; productName: string | null };
+type Rule = {
+  id: string;
+  roleId: string;
+  productId: string | null;
+  productName: string | null;
+  siteRole: string | null;
+  siteRoleName: string | null;
+};
+type SiteRole = { key: string; name: string; color: string };
 type LogRow = { id: string; ok: boolean; message: string; createdAt: Date; email: string | null; discordUsername: string | null };
 
+// Condition select values: "__any__", "role:<key>" or a product id
 const EVERY_CUSTOMER = "__any__";
+const ROLE_PREFIX = "role:";
 
 export function DiscordAdmin({
   env,
@@ -36,6 +47,7 @@ export function DiscordAdmin({
   guild,
   rules,
   products,
+  siteRoles,
   log,
   linked,
 }: {
@@ -45,6 +57,7 @@ export function DiscordAdmin({
   guild: GuildStatus | null;
   rules: Rule[];
   products: { id: string; name: string; type: string }[];
+  siteRoles: SiteRole[];
   log: LogRow[];
   linked: number;
 }) {
@@ -67,15 +80,27 @@ export function DiscordAdmin({
       <SetupSection env={env} inviteUrl={inviteUrl} config={config} guild={guild} />
 
       <Section title={t.rulesTitle}>
-        <p className="-mt-2 text-sm text-white/60">
-          {t.rulesHint} <b className="text-white/80">{t.rulesHintEvery}</b>{t.rulesHintRest}
-        </p>
+        <Alert variant="info">
+          <InfoIcon />
+          <AlertDescription>
+            {t.rulesHint} <b className="text-white">{t.rulesHintEvery}</b>
+            {t.rulesHintRest}
+            {t.rulesHintRoles}
+          </AlertDescription>
+        </Alert>
         {!guild?.ok ? (
-          <p className="rounded-lg border border-dashed border-white/15 p-6 text-center text-sm text-white/50">
-            {t.connectFirst}
-          </p>
+          <Alert>
+            <CircleAlertIcon />
+            <AlertDescription>{t.connectFirst}</AlertDescription>
+          </Alert>
         ) : (
-          <AddRuleForm roles={roles} products={products} pending={pending} onAdd={(v) => run(() => addDiscordRuleAction(v), t.ruleAdded)} />
+          <AddRuleForm
+            roles={roles}
+            products={products}
+            siteRoles={siteRoles}
+            pending={pending}
+            onAdd={(v) => run(() => addDiscordRuleAction(v), t.ruleAdded)}
+          />
         )}
         <div className="overflow-x-auto rounded-lg border border-white/10">
           <table className="w-full min-w-[520px]">
@@ -91,7 +116,18 @@ export function DiscordAdmin({
                 const role = roleById.get(rule.roleId);
                 return (
                   <tr key={rule.id} className="border-b border-white/5 last:border-0">
-                    <td className={td}>{rule.productId ? rule.productName : <span className="font-semibold text-brand-soft">{t.everyCustomer}</span>}</td>
+                    <td className={td}>
+                      {rule.productId ? (
+                        rule.productName
+                      ) : rule.siteRole ? (
+                        <span className="inline-flex items-center gap-2 font-semibold">
+                          <span className="size-2 rounded-full" style={{ background: siteRoles.find((r) => r.key === rule.siteRole)?.color }} />
+                          {t.siteRoleLabel(rule.siteRoleName ?? rule.siteRole)}
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-brand-soft">{t.everyCustomer}</span>
+                      )}
+                    </td>
                     <td className={td}>
                       {role ? (
                         <RoleChip role={role} />
@@ -222,7 +258,10 @@ function SetupSection({
       </ul>
       {guild?.ok &&
         guild.warnings.map((w) => (
-          <p key={w} className="rounded-md border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-200">{w}</p>
+          <Alert key={w} variant="warning">
+            <TriangleAlertIcon />
+            <AlertDescription>{w}</AlertDescription>
+          </Alert>
         ))}
       {inviteUrl && (
         <a
@@ -255,27 +294,42 @@ function SetupSection({
 function AddRuleForm({
   roles,
   products,
+  siteRoles,
   pending,
   onAdd,
 }: {
   roles: GuildRole[];
   products: { id: string; name: string; type: string }[];
+  siteRoles: SiteRole[];
   pending: boolean;
-  onAdd: (values: { productId: string | null; roleId: string }) => void;
+  onAdd: (values: { productId: string | null; siteRole: string | null; roleId: string }) => void;
 }) {
-  const [productId, setProductId] = useState(EVERY_CUSTOMER);
+  const [condition, setCondition] = useState(EVERY_CUSTOMER);
   const [roleId, setRoleId] = useState("");
 
   return (
     <div className="grid items-end gap-3 rounded-lg border border-brand/30 bg-brand/5 p-4 md:grid-cols-[1fr_1fr_auto]">
       <Field label={t.whenOwns}>
-        <select value={productId} onChange={(e) => setProductId(e.target.value)} className={inputCls}>
-          <option value={EVERY_CUSTOMER}>{t.everyCustomerOption}</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name} ({site.productTypes[p.type as keyof typeof site.productTypes] ?? p.type})
-            </option>
-          ))}
+        <select value={condition} onChange={(e) => setCondition(e.target.value)} className={inputCls}>
+          <optgroup label={t.groupGeneral}>
+            <option value={EVERY_CUSTOMER}>{t.everyCustomerOption}</option>
+          </optgroup>
+          {siteRoles.length > 0 && (
+            <optgroup label={t.groupSiteRoles}>
+              {siteRoles.map((r) => (
+                <option key={r.key} value={ROLE_PREFIX + r.key}>
+                  {t.siteRoleOption(r.name)}
+                </option>
+              ))}
+            </optgroup>
+          )}
+          <optgroup label={t.groupProducts}>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({site.productTypes[p.type as keyof typeof site.productTypes] ?? p.type})
+              </option>
+            ))}
+          </optgroup>
         </select>
       </Field>
       <Field label={t.giveRole}>
@@ -292,7 +346,13 @@ function AddRuleForm({
       <button
         type="button"
         disabled={pending || !roleId}
-        onClick={() => onAdd({ productId: productId === EVERY_CUSTOMER ? null : productId, roleId })}
+        onClick={() =>
+          onAdd({
+            productId: condition === EVERY_CUSTOMER || condition.startsWith(ROLE_PREFIX) ? null : condition,
+            siteRole: condition.startsWith(ROLE_PREFIX) ? condition.slice(ROLE_PREFIX.length) : null,
+            roleId,
+          })
+        }
         className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white disabled:opacity-50"
       >
         <PlusIcon className="size-4" /> {t.addRule}

@@ -10,6 +10,7 @@ import { CheckIcon, CircleAlertIcon, EyeIcon, EyeOffIcon, Loader2Icon, LockIcon,
 import { toast } from "sonner";
 import { signInAction, signUpAction } from "@/actions/auth";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { site } from "@/lang/site";
 import {
   signInSchema,
@@ -143,10 +144,10 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       {oauthError && (
-        <p role="alert" className="mb-5 flex gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-3 text-sm text-white/90">
-          <CircleAlertIcon className="mt-0.5 size-4 shrink-0 text-destructive" />
-          {OAUTH_ERRORS[oauthError] ?? t.oauthErrors.fallback}
-        </p>
+        <Alert variant="destructive" className="mb-5">
+          <CircleAlertIcon />
+          <AlertDescription>{OAUTH_ERRORS[oauthError] ?? t.oauthErrors.fallback}</AlertDescription>
+        </Alert>
       )}
       <div className="space-y-4">
         <TextField

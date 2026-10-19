@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon, KeyRoundIcon } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { requireUser } from "@/lib/auth-guard";
 import { discordLoginEnabled } from "@/lib/discord";
 import { DiscordCard } from "@/components/panel/discord-card";
@@ -43,7 +44,10 @@ async function Settings() {
         {user.passwordHash ? (
           <PasswordForm />
         ) : (
-          <p className="text-sm text-white/60">{t.noPassword}</p>
+          <Alert variant="info">
+            <KeyRoundIcon />
+            <AlertDescription>{t.noPassword}</AlertDescription>
+          </Alert>
         )}
       </section>
 

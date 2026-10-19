@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
-import { Loader2Icon, Trash2Icon } from "lucide-react";
+import { CircleAlertIcon, Loader2Icon, Trash2Icon } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import type { Product } from "@/db/schema";
 import { deleteProductAction, saveProductAction } from "@/actions/admin";
@@ -225,7 +226,12 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
           </div>
           <div>
             <p className="mb-2 text-xs font-semibold text-white/80">{t.pageSections}</p>
-            {errors.content && <p className="mb-2 text-xs text-destructive">{t.sectionsInvalid}</p>}
+            {errors.content && (
+              <Alert variant="destructive" className="mb-3">
+                <CircleAlertIcon />
+                <AlertDescription>{t.sectionsInvalid}</AlertDescription>
+              </Alert>
+            )}
             <BlocksEditor />
           </div>
         </Section>

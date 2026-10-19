@@ -66,9 +66,9 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
               )}
             </button>
           )}
-          {regularItems.map((item) => (
+          {regularItems.map((item, i) => (
             <Link
-              key={item.href}
+              key={`${item.href}-${i}`}
               href={item.href}
               onMouseEnter={scheduleClose}
               className={cn(
@@ -164,7 +164,7 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
             </div>
             <nav className="container-page flex flex-col gap-1 pt-4">
               {[...visibleItems, { href: "/dashboard", label: t.myAccount, visible: true }].map((item, i) => (
-                <motion.div key={item.href} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 * i }}>
+                <motion.div key={`${item.href}-${i}`} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 * i }}>
                   <Link href={item.href} className="block border-b border-white/5 py-4 text-2xl font-semibold">
                     {item.label}
                   </Link>

@@ -1,7 +1,9 @@
 "use server";
 
+import { randomBytes } from "node:crypto";
 import { revalidatePath, updateTag } from "next/cache";
-import { and, eq, ne } from "drizzle-orm";
+import { after } from "next/server";
+import { and, eq, inArray, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
@@ -10,12 +12,18 @@ import {
   coupons,
   docPages,
   faqs,
+  licenses,
+  orderItems,
+  orders,
   partners,
   products,
   roles,
   settings,
   users,
 } from "@/db/schema";
+import { getOwnedProductIds } from "@/lib/data/account";
+import { syncDiscordMember } from "@/lib/discord";
+import { syncAllUserRoles, syncUserRole } from "@/lib/role-sync";
 import { slugify } from "@/lib/format";
 import { admin } from "@/lang/admin";
 import { assertAdmin } from "@/lib/auth-guard";
@@ -221,6 +229,8 @@ export async function setUserRoleAction(input: unknown): Promise<AdminResult> {
   if (!role) return { ok: false, error: e.unknownRole };
 
   await db.update(users).set({ role: role.key }).where(eq(users.id, parsed.data.userId));
+  // Discord rules can depend on the site role
+  after(() => syncDiscordMember(parsed.data.userId));
   revalidatePath("/admin", "layout");
   return { ok: true };
 }
@@ -229,29 +239,110 @@ const roleSchema = z.object({
   key: z.string().max(40).optional(),
   name: z.string().trim().min(2).max(40),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/, admin.validation.hexColor),
+  // Euros; null = manual role (never given automatically)
+  minSpend: z.coerce.number().min(0).max(1_000_000).nullable().default(null),
 });
 
-/** Creates a role (key derived from the name) or renames/recolors an existing one. */
+/** Creates a role (key derived from the name) or edits an existing one's name, color and spend threshold. */
 export async function saveRoleAction(input: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = roleSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error);
-  const { key, name, color } = parsed.data;
+  const { key, name, color, minSpend } = parsed.data;
+  const minSpendCents = minSpend == null ? null : toCents(minSpend);
 
+  let thresholdChanged = minSpendCents != null;
   if (key) {
-    const updated = await db.update(roles).set({ name, color }).where(eq(roles.key, key)).returning({ key: roles.key });
-    if (!updated.length) return { ok: false, error: e.unknownRole };
+    const existing = await db.query.roles.findFirst({ where: eq(roles.key, key) });
+    if (!existing) return { ok: false, error: e.unknownRole };
+    // Built-in roles are never auto-assigned
+    if (existing.system && minSpendCents != null) return { ok: false, error: e.systemThreshold };
+    thresholdChanged = existing.minSpendCents !== minSpendCents;
+    await db.update(roles).set({ name, color, minSpendCents }).where(eq(roles.key, key));
   } else {
     const newKey = slugify(name);
     if (!newKey) return { ok: false, error: e.invalidData };
     const exists = await db.query.roles.findFirst({ where: eq(roles.key, newKey), columns: { key: true } });
     if (exists) return { ok: false, error: e.roleExists };
     // New roles sit between the built-in "user" (0) and "admin" (100)
-    await db.insert(roles).values({ key: newKey, name, color, sortOrder: 50 });
+    await db.insert(roles).values({ key: newKey, name, color, minSpendCents, sortOrder: 50 });
   }
+  if (thresholdChanged) await syncAllUserRoles();
   revalidatePath("/admin", "layout");
   revalidatePath("/dashboard", "layout");
   return { ok: true };
+}
+
+export type RecalcResult = { ok: true; changed: number } | { ok: false; error: string };
+
+/** Re-applies spend thresholds to every user. */
+export async function recalcRolesAction(): Promise<RecalcResult> {
+  await assertAdmin();
+  const changed = await syncAllUserRoles();
+  revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
+  return { ok: true, changed };
+}
+
+/** Gives a user a product for free (an admin-created €0 order), like a purchase without payment. */
+export async function grantProductAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = z.object({ userId: z.uuid(), productId: z.uuid() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: e.invalidData };
+  const { userId, productId } = parsed.data;
+
+  const product = await db.query.products.findFirst({ where: eq(products.id, productId) });
+  if (!product) return { ok: false, error: e.invalidId };
+  if ((await getOwnedProductIds(userId)).has(productId)) return { ok: false, error: e.alreadyOwned };
+
+  await db.transaction(async (tx) => {
+    const [order] = await tx
+      .insert(orders)
+      .values({ userId, subtotalCents: 0, totalCents: 0, couponCode: GRANT_CODE })
+      .returning({ id: orders.id });
+    await tx.insert(orderItems).values({ orderId: order.id, productId, priceCents: 0 });
+    if (product.type === "plugin") {
+      await tx.insert(licenses).values({ userId, productId, key: licenseKey() }).onConflictDoNothing();
+    }
+  });
+
+  await syncUserRole(userId);
+  after(() => syncDiscordMember(userId));
+  revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
+  return { ok: true };
+}
+
+/** Takes a product back: removes it from the user's orders (and its license). */
+export async function revokeProductAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = z.object({ userId: z.uuid(), productId: z.uuid() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: e.invalidData };
+  const { userId, productId } = parsed.data;
+
+  await db.transaction(async (tx) => {
+    const userOrders = tx.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
+    await tx.delete(orderItems).where(and(eq(orderItems.productId, productId), inArray(orderItems.orderId, userOrders)));
+    await tx.delete(licenses).where(and(eq(licenses.userId, userId), eq(licenses.productId, productId)));
+    // Drop orders left without items (e.g. an admin grant)
+    await tx.execute(
+      sql`delete from ${orders} o where o.user_id = ${userId} and not exists (select 1 from ${orderItems} oi where oi.order_id = o.id)`,
+    );
+  });
+
+  await syncUserRole(userId);
+  after(() => syncDiscordMember(userId));
+  revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
+  return { ok: true };
+}
+
+// Marks orders created by an admin grant, so they read differently in the orders list
+const GRANT_CODE = "ADMIN-GRANT";
+
+function licenseKey() {
+  const chunk = () => randomBytes(3).toString("hex").toUpperCase();
+  return `${chunk()}-${chunk()}-${chunk()}-${chunk()}`;
 }
 
 /** Deletes a custom role; its members fall back to "user" (ON DELETE SET DEFAULT). */

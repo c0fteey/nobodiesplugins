@@ -122,7 +122,12 @@ export const announcementSchema = z.object({
 
 const navItemSchema = z.object({
   label: z.string().trim().min(1, a.labelRequired).max(30),
-  href: z.string().trim().min(1).max(100),
+  href: z
+    .string()
+    .trim()
+    .min(1)
+    .max(200)
+    .refine((v) => v.startsWith("/") || /^https?:\/\//.test(v), a.href),
   visible: z.boolean(),
 });
 
