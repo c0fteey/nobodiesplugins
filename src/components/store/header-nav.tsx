@@ -10,6 +10,7 @@ import { Wordmark } from "@/components/brand/logo";
 import { DiscordIcon } from "@/components/brand/icons";
 import { DEFAULT_NAV_ITEMS } from "@/lib/site-defaults";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetClose, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ProductArt } from "./product-art";
 import { useCart } from "./cart-provider";
 import { site } from "@/lang/site";
@@ -147,36 +148,70 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
         )}
       </AnimatePresence>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-background lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="container-page flex h-[68px] items-center justify-between">
-              <Wordmark className="text-2xl" />
-              <button type="button" aria-label={t.closeMenu} onClick={() => setMobileOpen(false)}>
-                <XIcon className="size-7" />
+      {/* Mobile menu: a Sheet renders in a portal, so the header's backdrop-blur
+          (which traps position:fixed children) can't clip or see-through it */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="right" showCloseButton={false} className="w-full gap-0 border-white/10 bg-[#141414] p-0 sm:max-w-sm">
+          <SheetTitle className="sr-only">{t.mainLabel}</SheetTitle>
+          <div className="flex h-[68px] shrink-0 items-center justify-between border-b border-white/[0.06] px-5">
+            <Wordmark className="text-2xl [--logo-cut:#141414]" />
+            <SheetClose aria-label={t.closeMenu} className="grid size-10 place-items-center rounded-md text-white/80 hover:bg-white/5 hover:text-white">
+              <XIcon className="size-6" />
+            </SheetClose>
+          </div>
+          <nav className="flex-1 overflow-y-auto px-5 pt-2 pb-8" aria-label={t.mainLabel}>
+            {visibleItems.map((item, i) => (
+              <Link
+                key={`${item.href}-${i}`}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex items-center justify-between border-b border-white/5 py-4 text-lg font-semibold",
+                  pathname.startsWith(item.href) && item.href !== "/" ? "text-brand-soft" : "text-white",
+                )}
+              >
+                {item.label}
+                <ChevronRightIcon className="size-4 text-white/30" />
+              </Link>
+            ))}
+            {plugins.length > 0 && (
+              <div className="mt-6">
+                <p className="mb-3 text-[11px] font-bold tracking-[0.14em] text-white/45 uppercase">{t.allProducts}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {plugins.slice(0, 4).map((p) => (
+                    <Link key={p.id} href={`/products/${p.slug}`} onClick={() => setMobileOpen(false)} className="overflow-hidden rounded-lg ring-1 ring-white/10">
+                      <ProductArt product={p} size="sm" sizes="45vw" className="aspect-[4/3] w-full" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <Link
+                href="/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className="flex h-12 items-center justify-center gap-2 rounded-lg border border-white/10 text-sm font-semibold"
+              >
+                <UserIcon className="size-4" /> {t.myAccount}
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  open();
+                }}
+                className="flex h-12 items-center justify-center gap-2 rounded-lg bg-brand text-sm font-semibold text-white"
+              >
+                <ShoppingCartIcon className="size-4" /> {t.openCart}
+                {items.length > 0 && <span className="rounded-full bg-white/20 px-1.5 text-xs">{items.length}</span>}
               </button>
             </div>
-            <nav className="container-page flex flex-col gap-1 pt-4">
-              {[...visibleItems, { href: "/dashboard", label: t.myAccount, visible: true }].map((item, i) => (
-                <motion.div key={`${item.href}-${i}`} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 * i }}>
-                  <Link href={item.href} className="block border-b border-white/5 py-4 text-2xl font-semibold">
-                    {item.label}
-                  </Link>
-                </motion.div>
-              ))}
-              <a href={discordUrl} target="_blank" rel="noreferrer" className="mt-6 flex items-center gap-2 text-lg text-brand-soft">
-                <DiscordIcon className="size-6" /> {t.joinOurDiscord}
-              </a>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <a href={discordUrl} target="_blank" rel="noreferrer" className="mt-4 flex h-12 items-center justify-center gap-2 rounded-lg bg-[#5865f2] text-sm font-semibold text-white">
+              <DiscordIcon className="size-5" /> {t.joinOurDiscord}
+            </a>
+          </nav>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }

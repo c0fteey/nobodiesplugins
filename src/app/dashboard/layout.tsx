@@ -15,7 +15,7 @@ const BOTTOM: PanelNavItem[] = [{ href: "/dashboard/settings", label: t.settings
 
 export default function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   return (
-    <div className="flex min-h-screen bg-[#141414]">
+    <div className="min-h-screen bg-[#141414] md:flex">
       {/* Reads the pathname, so it streams in on dynamic routes */}
       <Suspense fallback={<PanelSidebarFallback />}>
         <PanelSidebar items={NAV} bottom={BOTTOM} />
@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: LayoutProps<"/dashboard">)
         <Suspense>
           <AdminLink />
         </Suspense>
-        <div className="px-4 py-12 sm:px-14">{children}</div>
+        <div className="px-4 py-6 sm:py-8 md:px-8 md:py-12 xl:px-14">{children}</div>
       </div>
     </div>
   );

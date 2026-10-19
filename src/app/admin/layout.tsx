@@ -59,7 +59,7 @@ const BOTTOM: PanelNavItem[] = [
 
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
-    <div className="flex min-h-screen bg-[#141414]">
+    <div className="min-h-screen bg-[#141414] md:flex">
       {/* Reads the pathname, so it streams in on dynamic routes */}
       <Suspense fallback={<PanelSidebarFallback />}>
         <PanelSidebar items={NAV} bottom={BOTTOM} />
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
         <Suspense fallback={<PanelHeaderFallback />}>
           <PanelHeader badge={t.badge} />
         </Suspense>
-        <div className="px-4 py-10 sm:px-14">
+        <div className="px-4 py-6 sm:py-8 md:px-8 md:py-10 xl:px-14">
           {/* Role is re-checked against the DB before any admin content renders */}
           <Suspense fallback={<div className="shimmer h-96 rounded-xl" />}>
             <AdminGate>{children}</AdminGate>

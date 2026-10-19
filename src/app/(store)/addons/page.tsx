@@ -32,7 +32,7 @@ export default async function AddonsPage() {
       <section className="bg-[#181818] py-12">
         <div className="container-page">
           <p className="mb-5 text-sm font-semibold tracking-[0.12em] text-white/80">{t.browseByPlugin}</p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {withAddons.map(({ plugin, count }) => (
               <Link
                 key={plugin.id}

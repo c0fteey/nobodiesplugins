@@ -36,13 +36,13 @@ async function Licenses() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard icon={ShieldIcon} label={t.totalActive} value={active.length} note={revoked ? t.revokedCount(revoked) : undefined} />
         <StatCard icon={ActivityIcon} label={t.totalChecks} value={checks} note={t.checksHint} />
         <StatCard icon={ServerIcon} label={t.connected} value={connected} note={connected ? t.online(connected) : t.noneOnline} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[2fr_1fr]">
         <section className="rounded-xl border border-white/10 bg-[#171717] p-8">
           <h2 className="text-xl font-bold">{t.managed}</h2>
           <LicenseTable

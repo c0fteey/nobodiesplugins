@@ -78,7 +78,7 @@ export function DiscordAdmin({
   const roleById = new Map(roles.map((r) => [r.id, r]));
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <SetupSection env={env} inviteUrl={inviteUrl} config={config} guild={guild} />
 
       <Section title={t.rulesTitle}>
@@ -279,7 +279,7 @@ function SetupSection({
         </a>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid grid-cols-1 gap-4">
         <Field label={t.serverId} hint={t.serverIdHint}>
           <input {...register("guildId")} placeholder="123456789012345678" inputMode="numeric" className={inputCls} />
         </Field>

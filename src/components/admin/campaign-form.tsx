@@ -74,11 +74,11 @@ export function CampaignForm({ campaign, products }: { campaign: Campaign | null
           router.push("/admin/campaigns");
         }),
       )}
-      className="grid gap-6 xl:grid-cols-[1fr_420px]"
+      className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_420px]"
     >
       <div className="grid content-start gap-6">
         <Section title={t.sections.offer}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label={t.trigger} error={errors.triggerProductId?.message}>
               <Controller
                 control={control}
@@ -117,7 +117,7 @@ export function CampaignForm({ campaign, products }: { campaign: Campaign | null
         </Section>
 
         <Section title={t.sections.copy}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label={t.name} error={errors.name?.message}>
               <input {...register("name")} placeholder={t.namePlaceholder} className={inputCls} />
             </Field>
@@ -134,7 +134,7 @@ export function CampaignForm({ campaign, products }: { campaign: Campaign | null
         </Section>
 
         <Section title={t.sections.schedule}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label={t.starts} hint={t.startsHint} error={errors.startsAt?.message}>
               <Controller
                 control={control}

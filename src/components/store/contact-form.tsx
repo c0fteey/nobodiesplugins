@@ -41,7 +41,7 @@ export function ContactForm() {
     });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-5">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid grid-cols-1 gap-5">
       <Field label={t.name} error={errors.name?.message}>
         <input {...register("name")} placeholder={t.namePlaceholder} className={fieldClass} aria-invalid={!!errors.name} />
       </Field>
@@ -80,7 +80,7 @@ export function ContactForm() {
 
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
   return (
-    <label className="grid gap-2">
+    <label className="grid grid-cols-1 gap-2">
       <span className="pl-1 text-sm font-semibold">
         {required && <span className="text-brand-soft">* </span>}
         {label}

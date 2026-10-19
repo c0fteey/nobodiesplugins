@@ -48,7 +48,7 @@ export function SeoForm({ seo }: { seo: SeoSettings }) {
       className="grid max-w-5xl gap-6"
     >
       <Section title={t.general}>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label={t.siteName} error={errors.siteName?.message}>
             <input {...register("siteName")} className={inputCls} />
           </Field>
@@ -87,7 +87,7 @@ export function SeoForm({ seo }: { seo: SeoSettings }) {
           </TabsList>
           {PAGE_KEYS.map((key) => (
             <TabsContent key={key} value={key}>
-              <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
                 <div className="grid content-start gap-4">
                   <CountedField
                     control={control}
@@ -169,7 +169,7 @@ function CountedField({
 }) {
   const length = (useWatch({ control, name }) ?? "").length;
   return (
-    <div className="grid gap-1.5">
+    <div className="grid grid-cols-1 gap-1.5">
       <Field label={label} hint={hint} error={error}>
         {input}
       </Field>

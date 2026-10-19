@@ -26,15 +26,15 @@ export default async function AdminOverview() {
       <AdminHeader title={t.title} description={t.description} action={{ href: "/admin/products/new", label: t.newProduct }} />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         {tiles.map(({ label, value, icon: Icon, href }) => (
-          <Link key={label} href={href} className="group relative overflow-hidden rounded-xl border border-white/10 bg-[#171717] p-6 transition hover:border-brand/50">
+          <Link key={label} href={href} className="group relative overflow-hidden rounded-xl border border-white/10 bg-[#171717] p-4 transition hover:border-brand/50 sm:p-6">
             <Icon className="absolute -right-3 -bottom-4 size-24 text-white/[0.04] transition group-hover:text-brand/10" />
             <p className="text-[11px] font-bold tracking-[0.14em] text-white/60">{label}</p>
-            <p className="mt-2 text-3xl font-bold">{value}</p>
+            <p className="mt-2 text-2xl font-bold break-words sm:text-3xl">{value}</p>
           </Link>
         ))}
       </div>
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[2fr_1fr]">
+      <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-[2fr_1fr]">
         <AdminCard>
           <div className="flex items-center justify-between p-6">
             <h3 className="text-lg font-bold">{t.recentOrders}</h3>
@@ -43,7 +43,8 @@ export default async function AdminOverview() {
           {orders.length === 0 ? (
             <p className="px-6 pb-6 text-sm text-white/50">{t.noOrders}</p>
           ) : (
-            <table className="w-full">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px]">
               <thead className="border-y border-white/5">
                 <tr><th className={th}>{admin.common.columns.date}</th><th className={th}>{admin.common.columns.customer}</th><th className={th}>{admin.common.columns.items}</th><th className={th}>{admin.common.columns.total}</th></tr>
               </thead>
@@ -52,12 +53,13 @@ export default async function AdminOverview() {
                   <tr key={order.id} className="border-b border-white/5 last:border-0">
                     <td className={td}>{formatDate(order.createdAt)}</td>
                     <td className={td}>{email}</td>
-                    <td className={`${td} text-white/70`}>{items.join(", ")}</td>
+                    <td className={`${td} text-white/70`}><span className="line-clamp-2">{items.join(", ")}</span></td>
                     <td className={`${td} font-semibold`}>{formatPrice(order.totalCents)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </AdminCard>
 

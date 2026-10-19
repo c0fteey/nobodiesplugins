@@ -83,7 +83,7 @@ export function ProfileForm({ name, email, image }: { name: string; email: strin
     >
       <AvatarPicker name={liveName || email} image={image} />
       <div className="flex-1">
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
             <label htmlFor="name" className={label}>{t.fullName}</label>
             <input id="name" {...register("name")} aria-invalid={!!errors.name} className={input} />

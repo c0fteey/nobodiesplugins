@@ -57,7 +57,7 @@ export function DocForm({ doc, plugins }: { doc: DocPage | null; plugins: { id: 
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-6 2xl:grid-cols-2">
       <div className="grid content-start gap-6">
         <Section title={t.section}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label={t.title} error={errors.title?.message}>
               <input
                 {...register("title", { onChange: (e) => !doc && setValue("slug", slugify(e.target.value)) })}

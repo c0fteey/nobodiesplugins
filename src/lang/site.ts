@@ -163,6 +163,9 @@ export const site = {
   browser: {
     searchPlaceholder: "Ürün ara",
     searchLabel: "Ürün ara",
+    filters: "Filtreler",
+    clearFilters: "Temizle",
+    showResults: (n: number) => `${n} ürünü göster`,
     category: "Kategori",
     price: "Fiyat",
     priceRange: "Fiyat aralığı",

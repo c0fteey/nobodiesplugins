@@ -48,7 +48,7 @@ async function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
         {bundlePlugin && bundleItems.length > 0 ? (
           <BundleCard plugin={bundlePlugin} items={bundleItems} />
         ) : (
@@ -83,7 +83,7 @@ async function DashboardContent() {
 
       <AccountCoupons coupons={coupons} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {plugins.map((plugin) => (
           <PluginPanelCard
             key={plugin.id}
@@ -102,11 +102,11 @@ async function DashboardContent() {
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
         <Skeleton className="h-[380px] rounded-xl" />
         <Skeleton className="h-[380px] rounded-xl" />
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Skeleton className="h-[640px] rounded-xl" />
         <Skeleton className="h-[640px] rounded-xl" />
       </div>

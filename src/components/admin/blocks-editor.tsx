@@ -163,8 +163,8 @@ function BlockFields({ index, type }: { index: number; type: BlockType }) {
   const p = (key: string) => `content.${index}.${key}` as `content.${number}.${string}`;
 
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {type !== "faq" && (
           <Field label={t.eyebrow}>
             <input {...register(p("eyebrow"))} className={inputCls} />
@@ -180,7 +180,7 @@ function BlockFields({ index, type }: { index: number; type: BlockType }) {
         </Field>
       )}
       {type === "media" && (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label={t.imageUrl} hint={t.imageUrlHint}>
             <div className="flex gap-2">
               <input {...register(p("imageUrl"))} placeholder="https://…" className={inputCls} />

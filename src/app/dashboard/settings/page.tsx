@@ -51,7 +51,7 @@ async function Settings() {
         )}
       </section>
 
-      <div className="grid gap-4 md:grid-cols-[1fr_170px]">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_170px]">
         <section className={card}>
           <h2 className="text-xs font-bold tracking-[0.18em] text-white/60">{t.transactions}</h2>
           {orders.length === 0 ? (

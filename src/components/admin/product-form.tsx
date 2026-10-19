@@ -97,10 +97,10 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
 
   return (
     <FormProvider {...form}>
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-6 xl:grid-cols-[1fr_340px]">
-      <div className="grid gap-6">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 gap-6">
         <Section title={t.sections.basics}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label={t.name} error={errors.name?.message}>
               <input
                 {...register("name", {
@@ -157,7 +157,7 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
         </Section>
 
         <Section title={t.sections.pricing}>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Field label={t.price} hint={t.priceHint} error={errors.price?.message}>
               <input type="number" step="0.01" min="0" {...register("price")} className={inputCls} aria-invalid={!!errors.price} />
             </Field>
@@ -183,7 +183,7 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
         </Section>
 
         <Section title={t.sections.cover}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label={t.coverImage} hint={t.coverImageHint} error={errors.imageUrl?.message}>
               <div className="flex gap-2">
                 <input {...register("imageUrl")} placeholder="https://…" className={inputCls} />
@@ -208,7 +208,7 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
         </Section>
 
         <Section title={t.sections.details}>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Field label={t.version} error={errors.version?.message}>
               <input {...register("version")} className={inputCls} />
             </Field>

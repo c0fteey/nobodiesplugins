@@ -73,7 +73,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
                   </div>
                   {b.cta && <span className="rounded-full bg-brand px-4 py-1.5 text-xs font-semibold">{b.cta} →</span>}
                 </div>
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   <Field label={t.bannerTitle} error={e?.title?.message}>
                     <input {...register(`announcements.${i}.title`)} className={inputCls} />
                   </Field>
@@ -114,7 +114,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
       </Section>
 
       <Section title={t.season}>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label={t.seasonLabel} hint={t.seasonLabelHint} error={errors.seasonLabel?.message}>
             <input {...register("seasonLabel")} className={inputCls} />
           </Field>
@@ -126,7 +126,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
 
       <Section title={t.socials}>
         <p className="-mt-3 text-xs text-white/50">{t.socialsHint}</p>
-        <div className="grid gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <SocialRow
             control={control}
             icon={<DiscordIcon className="size-5" />}
@@ -229,7 +229,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
       </Section>
 
       <Section title={t.footer}>
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <Field label={t.tagline} hint={t.taglineHint} error={errors.footer?.tagline?.message}>
             <input {...register("footer.tagline")} className={inputCls} placeholder={t.taglinePlaceholder} />
           </Field>

@@ -101,7 +101,7 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
       className="grid max-w-4xl gap-6"
     >
       <Section title={t.sections.code}>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label={t.code} hint={t.codeHint} error={errors.code?.message}>
             <div className="flex gap-2">
               <input {...register("code")} className={`${inputCls} font-mono uppercase`} aria-invalid={!!errors.code} />
@@ -123,7 +123,7 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
       </Section>
 
       <Section title={t.sections.discount}>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Field label={t.type}>
             <Controller
               control={control}
@@ -143,7 +143,7 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
       </Section>
 
       <Section title={t.sections.who}>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field
             label={t.lockEmail}
             hint={t.lockEmailHint}
@@ -164,7 +164,7 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
       </Section>
 
       <Section title={t.sections.valid}>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label={t.starts} hint={t.startsHint} error={errors.startsAt?.message}>
             <Controller
               control={control}

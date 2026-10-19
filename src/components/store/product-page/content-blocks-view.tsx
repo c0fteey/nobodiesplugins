@@ -55,7 +55,7 @@ function Block({ block, product, index }: { block: ContentBlock; product: Produc
       return (
         <section>
           <Heading eyebrow={block.eyebrow} title={block.title} text={block.text} />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {block.items.map((item, k) => (
               <div key={k} className="rounded-xl border border-white/5 bg-gradient-to-b from-[#221a3d] to-[#19171f] p-5 transition hover:border-brand/40">
                 <span className="grid size-10 place-items-center rounded-lg bg-brand/20 text-brand-soft">
@@ -84,7 +84,7 @@ function Block({ block, product, index }: { block: ContentBlock; product: Produc
       return (
         <section>
           <Heading eyebrow={block.eyebrow} title={block.title} text={block.text} />
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             {block.items.map((item, k) => (
               <div key={k} className="overflow-hidden rounded-xl border border-white/5 bg-[#1a1a1d]">
                 <Visual url={item.imageUrl} product={product} alt={item.title} />
@@ -117,7 +117,7 @@ function Block({ block, product, index }: { block: ContentBlock; product: Produc
       return (
         <section>
           <Heading eyebrow={block.eyebrow} title={block.title} text={block.text} />
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {block.items.map((item, k) => (
               <div key={k} className="rounded-lg border-l-2 border-brand bg-[#1c1c20] px-4 py-3">
                 <p className="text-sm font-bold">{item.title}</p>

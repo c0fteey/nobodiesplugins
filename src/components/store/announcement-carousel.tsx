@@ -25,7 +25,7 @@ export function AnnouncementCarousel({ announcements }: { announcements: Announc
 
   return (
     <div
-      className="container-page relative h-[70px] sm:h-[84px]"
+      className="container-page relative h-[70px] overflow-hidden sm:h-[84px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -36,19 +36,19 @@ export function AnnouncementCarousel({ announcements }: { announcements: Announc
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: "-100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 140, damping: 22 }}
-          className="absolute inset-x-4 inset-y-0 flex items-center justify-between gap-4 sm:inset-x-6"
+          className="absolute inset-x-4 inset-y-0 flex items-center justify-between gap-3 pb-2 sm:inset-x-6 sm:gap-4 sm:pb-0"
         >
-          <div className="mx-auto flex flex-col items-start gap-1 sm:mx-0 sm:pl-[16%]">
-            <p className="text-sm font-bold tracking-tight text-[#b9a6ff] sm:text-lg">{current.title}</p>
-            <p className="flex items-center gap-2 text-xs font-semibold text-white sm:text-sm">
-              {current.badge && <span className="rounded-full bg-brand px-2 py-0.5">{current.badge}</span>}
-              {current.text}
+          <div className="flex min-w-0 flex-col items-start gap-1 sm:pl-[16%]">
+            <p className="max-w-full truncate text-[13px] font-bold tracking-tight text-[#b9a6ff] sm:text-lg">{current.title}</p>
+            <p className="flex max-w-full items-center gap-2 text-[11px] font-semibold text-white sm:text-sm">
+              {current.badge && <span className="shrink-0 rounded-full bg-brand px-2 py-0.5 whitespace-nowrap">{current.badge}</span>}
+              <span className="truncate">{current.text}</span>
             </p>
           </div>
           {current.cta && (
             <Link
               href={current.href || "/products"}
-              className="shrink-0 rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-brand/30 transition hover:bg-brand/85 sm:mr-[16%] sm:px-5 sm:py-2.5 sm:text-base"
+              className="shrink-0 rounded-full bg-brand px-3 py-1.5 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg shadow-brand/30 transition hover:bg-brand/85 sm:mr-[16%] sm:px-5 sm:py-2.5 sm:text-base"
             >
               {current.cta} →
             </Link>

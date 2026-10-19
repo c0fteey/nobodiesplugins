@@ -53,7 +53,7 @@ export function Section({ title, children }: { title: string; children: React.Re
   return (
     <section className="rounded-xl border border-white/10 bg-[#171717] p-6">
       <h3 className="mb-5 text-sm font-bold tracking-wide text-white/90">{title}</h3>
-      <div className="grid gap-4">{children}</div>
+      <div className="grid grid-cols-1 gap-4">{children}</div>
     </section>
   );
 }

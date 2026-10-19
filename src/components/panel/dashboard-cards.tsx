@@ -42,7 +42,7 @@ export function BundleCard({ plugin, items }: { plugin: Product; items: Product[
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-xl border border-white/5 p-8 sm:p-10"
+      className="relative overflow-hidden rounded-xl border border-white/5 p-5 sm:p-10"
       style={{ background: `linear-gradient(120deg, #2a1d6e 0%, #1b1640 55%, #15131f 100%)` }}
     >
       <ProductArt
@@ -56,7 +56,7 @@ export function BundleCard({ plugin, items }: { plugin: Product; items: Product[
           <span className="rounded-sm border border-brand-soft/40 bg-brand/20 px-2 py-1 text-brand-soft">{t.bundle.bestValue}</span>
           {savePct > 0 && <span className="rounded-sm border border-success/40 bg-success/15 px-2 py-1 text-success">{t.bundle.save(savePct)}</span>}
         </div>
-        <h2 className="mt-5 text-4xl leading-tight font-bold tracking-tight">
+        <h2 className="mt-5 text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
           {t.bundle.titleLine1}
           <br />
           <span className="text-brand-soft">{t.bundle.titleLine2(shortName)}</span>
@@ -70,7 +70,7 @@ export function BundleCard({ plugin, items }: { plugin: Product; items: Product[
             onClick={() => {
               items.forEach((p, i) => add(p.id, { open: i === items.length - 1 }));
             }}
-            className="inline-flex h-11 items-center gap-2 rounded-md bg-[#8b6dff] px-5 font-semibold text-white transition hover:bg-[#8b6dff]/85"
+            className="inline-flex min-h-11 flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-md bg-[#8b6dff] px-4 py-2 font-semibold whitespace-nowrap text-white transition hover:bg-[#8b6dff]/85 sm:px-5"
           >
             <ShoppingCartIcon className="size-4" /> {t.bundle.get}
             {was > total && <s className="opacity-70">{formatPriceCompact(was)}</s>}

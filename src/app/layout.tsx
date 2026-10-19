@@ -40,6 +40,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="tr"
+      // Lets Next turn smooth scrolling off while it resets scroll on navigation, so pages open at the top
+      data-scroll-behavior="smooth"
       className={`${jakarta.variable} ${unbounded.variable} ${silkscreen.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">

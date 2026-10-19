@@ -189,7 +189,7 @@ function NewRoleForm() {
       }}
       className="flex flex-wrap items-end gap-3 rounded-xl border border-brand/30 bg-brand/5 p-4"
     >
-      <label className="grid gap-1.5">
+      <label className="grid grid-cols-1 gap-1.5">
         <span className="text-xs font-semibold text-white/80">{t.color}</span>
         <input type="color" value={color} onChange={(e) => setColor(e.target.value)} className="size-10 rounded-md border border-white/10 bg-transparent p-0.5" />
       </label>

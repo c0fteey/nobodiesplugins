@@ -153,7 +153,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
           {productDocs.length > 0 && (
             <section id="docs" className="scroll-mt-20 pt-16">
               <SectionHeading title={t.wikiTitle} description={t.wikiDescription} />
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {productDocs.map((d) => (
                   <Link key={d.id} href={`/docs/${d.slug}`} className="group flex items-center gap-3 rounded-lg border border-white/10 bg-[#1a1a1d] p-4 transition hover:border-brand/50">
                     <BookOpenIcon className="size-5 text-brand-soft" />
