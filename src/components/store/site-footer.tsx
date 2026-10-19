@@ -8,8 +8,12 @@ import { site } from "@/lang/site";
 const t = site.footer;
 
 export async function SiteFooter() {
-  const { discordUrl, footer } = await getSettings();
-  const { tagline, showDiscord, showTwitter, showInstagram } = footer;
+  const { discordUrl, footer, socials } = await getSettings();
+  const { tagline } = footer;
+  // An icon needs both the toggle and a real link
+  const showDiscord = footer.showDiscord && !!discordUrl;
+  const showTwitter = footer.showTwitter && !!socials.twitter;
+  const showInstagram = footer.showInstagram && !!socials.instagram;
 
   return (
     <footer className="border-t border-white/[0.06] bg-[#111] py-14">
@@ -33,12 +37,12 @@ export async function SiteFooter() {
                   </a>
                 )}
                 {showTwitter && (
-                  <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter" className="transition hover:text-white">
+                  <a href={socials.twitter} target="_blank" rel="noreferrer" aria-label="Twitter" className="transition hover:text-white">
                     <TwitterIcon className="size-5" />
                   </a>
                 )}
                 {showInstagram && (
-                  <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="transition hover:text-white">
+                  <a href={socials.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="transition hover:text-white">
                     <InstagramIcon className="size-5" />
                   </a>
                 )}

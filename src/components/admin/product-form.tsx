@@ -52,6 +52,7 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
       badge: product?.badge ?? "none",
       imageUrl: product?.imageUrl ?? "",
       downloadUrl: product?.downloadUrl ?? "",
+      requiresLicense: product?.requiresLicense ?? true,
       accentFrom: product?.accentFrom ?? "#6d28d9",
       accentTo: product?.accentTo ?? "#a855f7",
       artTitle: product?.artTitle ?? "",
@@ -222,6 +223,7 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
           <div className="flex gap-6">
             <Toggle label={t.publishedToggle} control={control} name="published" />
             <Toggle label={t.featuredToggle} control={control} name="featured" />
+            <Toggle label={t.licenseToggle} control={control} name="requiresLicense" />
           </div>
         </Section>
 

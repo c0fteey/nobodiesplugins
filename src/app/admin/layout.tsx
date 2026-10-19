@@ -22,6 +22,7 @@ const NAV: PanelNavItem[] = [
     icon: "receipt",
     items: [
       { href: "/admin/orders", label: t.orders, icon: "receipt" },
+      { href: "/admin/licenses", label: t.licenses, icon: "lock" },
       { href: "/admin/coupons", label: t.coupons, icon: "ticket" },
       { href: "/admin/campaigns", label: t.campaigns, icon: "gift" },
     ],
@@ -45,7 +46,14 @@ const NAV: PanelNavItem[] = [
   },
 ];
 const BOTTOM: PanelNavItem[] = [
-  { href: "/admin/settings", label: t.settings, icon: "sliders" },
+  {
+    label: t.site,
+    icon: "sliders",
+    items: [
+      { href: "/admin/settings", label: t.settings, icon: "sliders" },
+      { href: "/admin/seo", label: t.seo, icon: "search" },
+    ],
+  },
   { href: "/dashboard", label: t.myDashboard, icon: "shield", exact: true },
 ];
 

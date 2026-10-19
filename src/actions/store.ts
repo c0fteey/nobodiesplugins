@@ -1,11 +1,11 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { contactMessages, couponRedemptions, licenses, orderItems, orders, products } from "@/db/schema";
+import { contactMessages, couponRedemptions, orderItems, orders, products } from "@/db/schema";
+import { issueLicenses } from "@/lib/licenses";
 import { getActionUser } from "@/lib/auth-guard";
 import { getOwnedProductIds } from "@/lib/data/account";
 import { syncDiscordMember } from "@/lib/discord";
@@ -31,11 +31,6 @@ export type CartPreview =
       gifts: { productId: string; name: string; campaignLabel: string; worthCents: number }[];
     }
   | { ok: false; error: string };
-
-function licenseKey() {
-  const chunk = () => randomBytes(3).toString("hex").toUpperCase();
-  return `${chunk()}-${chunk()}-${chunk()}-${chunk()}`;
-}
 
 /** Server-priced totals for the cart drawer (coupon + free gifts). */
 export async function previewCartAction(input: unknown): Promise<CartPreview> {
@@ -122,14 +117,8 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
         });
       }
 
-      // Plugins ship with a license key; add-ons/models/builds ride on the plugin's
-      const licensed = [...cart.items, ...cart.gifts.map((g) => g.product)].filter((p) => p.type === "plugin");
-      if (licensed.length) {
-        await tx
-          .insert(licenses)
-          .values(licensed.map((p) => ({ userId: user.id, productId: p.id, key: licenseKey() })))
-          .onConflictDoNothing();
-      }
+      // Every product marked "requires license" (plugins by default) gets its own key, gifts included
+      await issueLicenses(tx, user.id, [...cart.items, ...cart.gifts.map((g) => g.product)]);
       return order.id;
     });
   } catch (error) {

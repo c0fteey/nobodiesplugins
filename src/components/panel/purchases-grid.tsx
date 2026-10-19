@@ -18,6 +18,7 @@ type Filter = "all" | Product["type"];
 
 const STAT_TYPES = [
   { key: "plugin", label: t.stats.plugins },
+  { key: "addon", label: t.stats.addons },
   { key: "model", label: t.stats.models },
   { key: "build", label: t.stats.builds },
 ] as const;
@@ -33,29 +34,28 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<"recommended" | "newest" | "name">("recommended");
 
-  // Add-ons count as plugins in the stats, like the reference
-  const kind = (p: Product) => (p.type === "addon" ? "plugin" : p.type);
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: purchases.length };
-    purchases.forEach(({ product }) => (c[kind(product)] = (c[kind(product)] ?? 0) + 1));
+    purchases.forEach(({ product }) => (c[product.type] = (c[product.type] ?? 0) + 1));
     return c;
   }, [purchases]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = purchases.filter(
-      ({ product }) => (filter === "all" || kind(product) === filter) && (!q || product.name.toLowerCase().includes(q)),
+      ({ product }) => (filter === "all" || product.type === filter) && (!q || product.name.toLowerCase().includes(q)),
     );
     if (sort === "newest") list.sort((a, b) => b.acquiredAt.localeCompare(a.acquiredAt));
     if (sort === "name") list.sort((a, b) => a.product.name.localeCompare(b.product.name));
     return list;
   }, [purchases, query, filter, sort]);
 
-  const chips = (["all", "plugin", "model", "build"] as const).filter((k) => k === "all" || counts[k]);
+  // Only types the user actually owns get a filter chip
+  const chips = (["all", "plugin", "addon", "model", "build"] as const).filter((k) => k === "all" || counts[k]);
 
   return (
     <div className="mt-8">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label={t.stats.total} value={purchases.length} />
         {STAT_TYPES.map((s) => (
           <Stat key={s.key} label={s.label} value={counts[s.key] ?? 0} />
@@ -82,7 +82,7 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
         />
       </div>
 
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         {chips.map((k) => (
           <button
             key={k}

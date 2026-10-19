@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BookOpenIcon, ChevronRightIcon } from "lucide-react";
 import { getDocPages, getProductBySlug, getProducts } from "@/lib/data/store";
+import { contentMetadata } from "@/lib/seo";
 import { PRODUCT_TYPE_LABEL } from "@/lib/format";
 import { ProductArt } from "@/components/store/product-art";
 import { ProductCard } from "@/components/store/product-card";
@@ -25,7 +26,14 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/products/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  return product ? { title: product.name, description: product.shortDescription } : {};
+  return product
+    ? contentMetadata({
+        title: product.name,
+        description: product.shortDescription,
+        image: product.bannerUrl || product.imageUrl,
+        path: `/products/${product.slug}`,
+      })
+    : {};
 }
 
 export default async function ProductPage({ params }: PageProps<"/products/[slug]">) {

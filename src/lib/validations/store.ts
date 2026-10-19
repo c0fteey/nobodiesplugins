@@ -57,6 +57,7 @@ export const productSchema = z
     badge: z.enum(["sale", "new", "none"]).default("none"),
     imageUrl: optionalUrl,
     downloadUrl: optionalUrl,
+    requiresLicense: z.boolean().default(false),
     accentFrom: hexColor,
     accentTo: hexColor,
     artTitle: z.string().trim().max(24).optional().default(""),
@@ -144,8 +145,45 @@ export const settingsSchema = z.object({
   seasonLabel: z.string().trim().min(2).max(40),
   discordUrl: z.url(),
   supportEmail: z.email(),
+  socials: z.object({
+    youtube: z.string().trim().refine((v) => v === "" || /^https?:\/\//.test(v), a.url).default(""),
+    twitter: z.string().trim().refine((v) => v === "" || /^https?:\/\//.test(v), a.url).default(""),
+    instagram: z.string().trim().refine((v) => v === "" || /^https?:\/\//.test(v), a.url).default(""),
+  }),
   navItems: z.array(navItemSchema).min(1).max(20),
   footer: footerSchema,
+});
+
+const emptyOrUrl = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === "" || /^https?:\/\/\S+$/.test(v), a.url);
+
+const pageSeoSchema = z.object({
+  title: z.string().trim().max(120),
+  description: z.string().trim().max(320),
+  image: emptyOrUrl,
+});
+
+export const seoSchema = z.object({
+  siteName: z.string().trim().min(1).max(60),
+  siteUrl: z.string().trim().max(200).refine((v) => /^https?:\/\/[^\s/]+/.test(v), a.url),
+  titleTemplate: z.string().trim().max(80).refine((v) => v.includes("%s"), a.titleTemplate),
+  defaultDescription: z.string().trim().max(320),
+  defaultImage: emptyOrUrl,
+  twitterHandle: z.string().trim().max(40),
+  indexable: z.boolean(),
+  pages: z.object({
+    home: pageSeoSchema,
+    products: pageSeoSchema,
+    addons: pageSeoSchema,
+    docs: pageSeoSchema,
+    about: pageSeoSchema,
+    help: pageSeoSchema,
+    login: pageSeoSchema,
+    register: pageSeoSchema,
+  }),
 });
 
 // Accepts a Date (already parsed by the client resolver) or a date string; "" = none

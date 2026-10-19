@@ -13,6 +13,8 @@ export const UPLOAD_LIMITS = {
   banner: { maxBytes: 8 * MB, types: ANIMATED, admin: true },
   block: { maxBytes: 8 * MB, types: ANIMATED, admin: true },
   logo: { maxBytes: 2 * MB, types: STILL, admin: true },
+  // Link preview images (Open Graph)
+  seo: { maxBytes: 5 * MB, types: STILL, admin: true },
 } as const;
 
 export type UploadKind = keyof typeof UPLOAD_LIMITS;

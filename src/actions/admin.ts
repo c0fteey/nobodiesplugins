@@ -1,6 +1,5 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
 import { revalidatePath, updateTag } from "next/cache";
 import { after } from "next/server";
 import { and, eq, inArray, ne, sql } from "drizzle-orm";
@@ -20,10 +19,12 @@ import {
   roles,
   settings,
   users,
+  type SiteSettings,
 } from "@/db/schema";
 import { getOwnedProductIds } from "@/lib/data/account";
 import { syncDiscordMember } from "@/lib/discord";
 import { syncAllUserRoles, syncUserRole } from "@/lib/role-sync";
+import { backfillLicenses, deleteLicenses, issueLicenses, regenerateLicenseKey } from "@/lib/licenses";
 import { slugify } from "@/lib/format";
 import { admin } from "@/lang/admin";
 import { assertAdmin } from "@/lib/auth-guard";
@@ -34,6 +35,7 @@ import {
   faqSchema,
   partnerSchema,
   productSchema,
+  seoSchema,
   settingsSchema,
 } from "@/lib/validations/store";
 
@@ -81,6 +83,7 @@ export async function saveProductAction(input: unknown): Promise<AdminResult> {
     badge: p.badge === "none" ? null : p.badge,
     imageUrl: p.imageUrl,
     downloadUrl: p.downloadUrl,
+    requiresLicense: p.requiresLicense,
     accentFrom: p.accentFrom,
     accentTo: p.accentTo,
     artTitle: p.artTitle || null,
@@ -104,8 +107,12 @@ export async function saveProductAction(input: unknown): Promise<AdminResult> {
     id = row.id;
   }
 
+  // Turning licensing on for a product that already has owners gives them their keys
+  if (p.requiresLicense) await backfillLicenses({ id: id!, slug: p.slug, requiresLicense: true });
+
   updateTag("products");
   revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
   return { ok: true, id };
 }
 
@@ -220,6 +227,19 @@ export async function saveSettingsAction(input: unknown): Promise<AdminResult> {
   return { ok: true };
 }
 
+export async function saveSeoAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = seoSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+
+  // Stored in the same settings table as the site settings, under its own key
+  const value = { ...parsed.data, siteUrl: parsed.data.siteUrl.replace(/\/$/, "") } as unknown as SiteSettings;
+  await db.insert(settings).values({ key: "seo", value }).onConflictDoUpdate({ target: settings.key, set: { value } });
+  updateTag("seo");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
 export async function setUserRoleAction(input: unknown): Promise<AdminResult> {
   const me = await assertAdmin();
   const parsed = z.object({ userId: z.uuid(), role: z.string().min(1).max(40) }).safeParse(input);
@@ -301,9 +321,7 @@ export async function grantProductAction(input: unknown): Promise<AdminResult> {
       .values({ userId, subtotalCents: 0, totalCents: 0, couponCode: GRANT_CODE })
       .returning({ id: orders.id });
     await tx.insert(orderItems).values({ orderId: order.id, productId, priceCents: 0 });
-    if (product.type === "plugin") {
-      await tx.insert(licenses).values({ userId, productId, key: licenseKey() }).onConflictDoNothing();
-    }
+    await issueLicenses(tx, userId, [product]);
   });
 
   await syncUserRole(userId);
@@ -323,7 +341,7 @@ export async function revokeProductAction(input: unknown): Promise<AdminResult> 
   await db.transaction(async (tx) => {
     const userOrders = tx.select({ id: orders.id }).from(orders).where(eq(orders.userId, userId));
     await tx.delete(orderItems).where(and(eq(orderItems.productId, productId), inArray(orderItems.orderId, userOrders)));
-    await tx.delete(licenses).where(and(eq(licenses.userId, userId), eq(licenses.productId, productId)));
+    await deleteLicenses(tx, userId, [productId]);
     // Drop orders left without items (e.g. an admin grant)
     await tx.execute(
       sql`delete from ${orders} o where o.user_id = ${userId} and not exists (select 1 from ${orderItems} oi where oi.order_id = o.id)`,
@@ -340,9 +358,29 @@ export async function revokeProductAction(input: unknown): Promise<AdminResult> 
 // Marks orders created by an admin grant, so they read differently in the orders list
 const GRANT_CODE = "ADMIN-GRANT";
 
-function licenseKey() {
-  const chunk = () => randomBytes(3).toString("hex").toUpperCase();
-  return `${chunk()}-${chunk()}-${chunk()}-${chunk()}`;
+
+const licenseStatusSchema = z.object({ id: z.uuid(), status: z.enum(["active", "revoked"]) });
+
+/** Revoke a license (the key stops verifying) or turn it back on. */
+export async function setLicenseStatusAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = licenseStatusSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: e.invalidData };
+  await db.update(licenses).set({ status: parsed.data.status }).where(eq(licenses.id, parsed.data.id));
+  revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
+  return { ok: true };
+}
+
+/** New key for any license; the old one stops working at once. */
+export async function regenerateLicenseAction(id: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: e.invalidId };
+  if (!(await regenerateLicenseKey(parsed.data))) return { ok: false, error: e.invalidId };
+  revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
+  return { ok: true };
 }
 
 /** Deletes a custom role; its members fall back to "user" (ON DELETE SET DEFAULT). */

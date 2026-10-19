@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { CheckIcon, CircleArrowDownIcon, CopyIcon, EyeIcon, EyeOffIcon } from "lucide-react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { CheckIcon, CircleArrowDownIcon, CopyIcon, EyeIcon, EyeOffIcon, Loader2Icon, RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
+import { regenerateMyLicenseAction } from "@/actions/account";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 import { site } from "@/lang/site";
 
@@ -17,14 +20,32 @@ type LicenseRow = {
   activations: number;
 };
 
+// NB-CRATES-7KQ2-M9XA-4HTP -> NB-CRATES-••••-••••-4HTP (keeps the product part readable)
 const mask = (key: string) => {
   const parts = key.split("-");
-  return parts.map((p, i) => (i === 0 || i === parts.length - 1 ? p : "••••")).join("-");
+  const keep = parts[0] === "NB" ? 2 : 1;
+  return parts.map((p, i) => (i < keep || i === parts.length - 1 ? p : "••••")).join("-");
 };
 
 export function LicenseTable({ licenses }: { licenses: LicenseRow[] }) {
   const [revealed, setRevealed] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [, start] = useTransition();
+  const router = useRouter();
+
+  async function regenerate(row: LicenseRow) {
+    if (!(await confirmDialog({ title: t.regenerateConfirm, confirmLabel: t.regenerate }))) return;
+    setBusy(row.id);
+    start(async () => {
+      const result = await regenerateMyLicenseAction(row.id);
+      setBusy(null);
+      if (!result.ok) return void toast.error(result.error);
+      toast.success(result.message);
+      setRevealed(row.id);
+      router.refresh();
+    });
+  }
 
   async function copy(row: LicenseRow) {
     try {
@@ -89,9 +110,21 @@ export function LicenseTable({ licenses }: { licenses: LicenseRow[] }) {
               </td>
               <td className="py-5 text-white/60">{row.activations ? t.activations(row.activations) : t.noActivity}</td>
               <td className="py-5 text-right">
-                <a href={`/api/download/${row.productId}`} aria-label={t.download(row.productName)} className="inline-flex text-brand-soft hover:text-white">
-                  <CircleArrowDownIcon className="size-5" />
-                </a>
+                <span className="inline-flex items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={busy === row.id}
+                    onClick={() => regenerate(row)}
+                    aria-label={t.regenerate}
+                    title={t.regenerate}
+                    className="inline-flex text-white/50 transition hover:text-white disabled:opacity-50"
+                  >
+                    {busy === row.id ? <Loader2Icon className="size-4 animate-spin" /> : <RefreshCwIcon className="size-4" />}
+                  </button>
+                  <a href={`/api/download/${row.productId}`} aria-label={t.download(row.productName)} className="inline-flex text-brand-soft hover:text-white">
+                    <CircleArrowDownIcon className="size-5" />
+                  </a>
+                </span>
               </td>
             </tr>
           ))}

@@ -125,6 +125,8 @@ export const products = pgTable(
     changelog: text("changelog"),
     // Where buyers download the jar/zip; only handed out after an ownership check
     downloadUrl: text("download_url"),
+    // Owners get a product-specific license key (plugins by default)
+    requiresLicense: boolean("requires_license").notNull().default(false),
     // Optional wide banner shown under the product header
     bannerUrl: text("banner_url"),
     // "Key stats" in the product sidebar, e.g. { label: "Folia", value: "Supported" }
@@ -256,8 +258,11 @@ export const licenses = pgTable(
       .notNull()
       .references(() => products.id, { onDelete: "cascade" }),
     status: licenseStatus("status").notNull().default("active"),
+    // Filled by POST /api/licenses/verify: every successful check counts as an activation
     activations: integer("activations").notNull().default(0),
     lastSeenAt: timestamp("last_seen_at", { mode: "date" }),
+    lastServer: text("last_server"),
+    lastIp: text("last_ip"),
     createdAt: createdAt(),
   },
   (l) => [uniqueIndex("license_user_product_idx").on(l.userId, l.productId)],
@@ -337,6 +342,8 @@ export type SiteSettings = {
   seasonLabel: string;
   discordUrl: string;
   supportEmail: string;
+  // Real profile links; an icon is only shown when its link is set
+  socials: { youtube: string; twitter: string; instagram: string };
   navItems: NavItem[];
   footer: FooterSettings;
 };

@@ -32,6 +32,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   seasonLabel: "Cadılar Bayramı",
   discordUrl: "https://discord.com",
   supportEmail: "support@nobodies.gg",
+  socials: { youtube: "", twitter: "", instagram: "" },
   navItems: DEFAULT_NAV_ITEMS,
   footer: {
     tagline: "Ciddi Minecraft sunucuları için premium eklentiler.",
@@ -76,7 +77,7 @@ export function normalizeSettings(value: unknown): SiteSettings {
     (stored.announcement ? [{ ...stored.announcement, href: "/products" }] : DEFAULT_SETTINGS.announcements);
   const { announcement: _legacy, ...rest } = stored;
   void _legacy;
-  return { ...DEFAULT_SETTINGS, ...rest, announcements };
+  return { ...DEFAULT_SETTINGS, ...rest, socials: { ...DEFAULT_SETTINGS.socials, ...rest.socials }, announcements };
 }
 
 /** Active campaigns with their trigger/reward ids; time windows are checked by callers. */

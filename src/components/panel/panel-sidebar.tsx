@@ -16,6 +16,7 @@ import {
   LogOutIcon,
   PackageIcon,
   ReceiptIcon,
+  SearchIcon,
   SettingsIcon,
   ShieldIcon,
   ShoppingBagIcon,
@@ -54,6 +55,7 @@ const ICONS = {
   ticket: TicketPercentIcon,
   gift: GiftIcon,
   discord: DiscordIcon,
+  search: SearchIcon,
 } as const;
 
 type PanelIcon = keyof typeof ICONS;

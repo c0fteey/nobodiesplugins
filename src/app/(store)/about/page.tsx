@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { LockIcon, MailIcon, MessageCircleIcon, TrophyIcon } from "lucide-react";
 import { DiscordIcon, InstagramIcon, YoutubeIcon } from "@/components/brand/icons";
 import { getPartners, getProducts, getSettings } from "@/lib/data/store";
@@ -7,7 +8,9 @@ import { site } from "@/lang/site";
 
 const t = site.about;
 
-export const metadata: Metadata = { title: site.meta.pages.about };
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("about");
+}
 
 const FEATURES = [
   { icon: TrophyIcon, ...t.features.quality },
@@ -18,11 +21,12 @@ const FEATURES = [
 export default async function AboutPage() {
   const [settings, products, partners] = await Promise.all([getSettings(), getProducts(), getPartners()]);
   const players = partners.reduce((sum, p) => sum + p.playersAvg, 0);
+  // Only real numbers: partner stats disappear while there are no partners
   const stats = [
     { value: products.filter((p) => p.type === "plugin").length, label: t.stats.plugins },
     { value: products.filter((p) => p.type !== "plugin").length, label: t.stats.others },
-    { value: partners.length, label: t.stats.partners },
-    { value: players.toLocaleString("tr-TR"), label: t.stats.players },
+    ...(partners.length ? [{ value: partners.length, label: t.stats.partners }] : []),
+    ...(players ? [{ value: players.toLocaleString("tr-TR"), label: t.stats.players }] : []),
   ];
 
   return (
@@ -51,12 +55,16 @@ export default async function AboutPage() {
             >
               <DiscordIcon className="size-5" /> {site.common.joinDiscord}
             </a>
-            <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube" className="text-brand-soft">
-              <YoutubeIcon className="size-7" />
-            </a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram" className="text-brand-soft">
-              <InstagramIcon className="size-6" />
-            </a>
+            {settings.socials.youtube && (
+              <a href={settings.socials.youtube} target="_blank" rel="noreferrer" aria-label="YouTube" className="text-brand-soft">
+                <YoutubeIcon className="size-7" />
+              </a>
+            )}
+            {settings.socials.instagram && (
+              <a href={settings.socials.instagram} target="_blank" rel="noreferrer" aria-label="Instagram" className="text-brand-soft">
+                <InstagramIcon className="size-6" />
+              </a>
+            )}
           </div>
         </div>
         <OutlineMark />
@@ -79,7 +87,7 @@ export default async function AboutPage() {
 
       <section className="mt-10 bg-[#212b2a] py-24 text-center">
         <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">{t.trustedTitle}</h2>
-        <div className="container-page mt-12 grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className={`container-page mt-12 grid grid-cols-2 gap-8 ${stats.length > 2 ? "md:grid-cols-4" : "mx-auto max-w-xl"}`}>
           {stats.map((s) => (
             <div key={s.label}>
               <p className="text-4xl font-bold text-success">{s.value}</p>

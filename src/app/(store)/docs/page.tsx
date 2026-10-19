@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -19,7 +20,9 @@ import { site } from "@/lang/site";
 
 const t = site.docs;
 
-export const metadata: Metadata = { title: site.meta.pages.docs };
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("docs");
+}
 
 const ICONS = [BoxIcon, StoreIcon, SwordsIcon, PuzzleIcon];
 
@@ -91,7 +94,7 @@ export default async function DocsPage() {
             >
               <p className="font-mono text-[11px] text-white/50">{t.buildLabel(p.version)}</p>
               <p className="text-sm font-semibold">{p.name}</p>
-              <p className="text-xs text-white/60">{p.changelog ?? t.defaultChangelog}</p>
+              {p.changelog && <p className="text-xs text-white/60">{p.changelog}</p>}
             </Link>
           ))}
         </div>

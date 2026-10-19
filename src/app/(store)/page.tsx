@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { pageMetadata } from "@/lib/seo";
 import { getProducts } from "@/lib/data/store";
 import { FeatureCard, ProductCard } from "@/components/store/product-card";
 import { SectionHeading } from "@/components/store/section-heading";
@@ -7,6 +9,10 @@ import { HeroArt } from "@/components/store/hero-art";
 import { site } from "@/lang/site";
 
 const t = site.home;
+
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("home");
+}
 
 export default async function HomePage() {
   const products = await getProducts();

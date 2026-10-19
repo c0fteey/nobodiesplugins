@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ChoiceSelect } from "@/components/ui/choice-select";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { admin } from "@/lang/admin";
+import { site } from "@/lang/site";
 
 const t = admin.coupons.form;
 
@@ -185,8 +186,36 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
               else next.add(id);
               field.onChange([...next]);
             };
+            // Quick picks: a whole product type at once; clicking a fully selected type removes it again
+            const ofType = (type: ProductOption["type"]) => products.filter((p) => p.type === type).map((p) => p.id);
+            const typeSelected = (type: ProductOption["type"]) => {
+              const ids = ofType(type);
+              return ids.length > 0 && ids.every((id) => selected.has(id));
+            };
+            const toggleType = (type: ProductOption["type"]) => {
+              const next = new Set(selected);
+              const all = typeSelected(type);
+              ofType(type).forEach((id) => (all ? next.delete(id) : next.add(id)));
+              field.onChange([...next]);
+            };
+            const chip = (active: boolean) =>
+              `inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
+                active ? "border-brand bg-brand/20 text-white" : "border-white/10 text-white/70 hover:border-white/30 hover:text-white"
+              }`;
             return (
               <div>
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => field.onChange([])} className={chip(selected.size === 0)}>
+                    {t.wholeCart}
+                  </button>
+                  {(["plugin", "addon", "model", "build"] as const)
+                    .filter((type) => ofType(type).length > 0)
+                    .map((type) => (
+                      <button key={type} type="button" onClick={() => toggleType(type)} className={chip(typeSelected(type))}>
+                        {t.allOfType(site.productTypesPlural[type])} <span className="text-white/40">{ofType(type).length}</span>
+                      </button>
+                    ))}
+                </div>
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <span className="text-xs font-semibold text-white/80">
                     {t.onlyProducts} {selected.size === 0 ? t.noneSelected : t.selected(selected.size)}

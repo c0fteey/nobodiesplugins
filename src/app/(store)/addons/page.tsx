@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ProductGridSkeleton } from "@/components/store/product-grid-skeleton";
@@ -9,7 +10,9 @@ import { site } from "@/lang/site";
 
 const t = site.addonsPage;
 
-export const metadata: Metadata = { title: site.meta.pages.addons };
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("addons");
+}
 
 export default async function AddonsPage() {
   const products = await getProducts();

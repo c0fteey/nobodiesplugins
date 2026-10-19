@@ -84,7 +84,7 @@ const SHOP_CONTENT: ContentBlock[] = [
   },
 ];
 
-const { products, docPages, faqs, partners, settings, campaigns, coupons } = schema;
+const { products, docPages, faqs, settings, campaigns, coupons } = schema;
 
 type Seed = Omit<typeof products.$inferInsert, "parentId"> & { parent?: string };
 
@@ -175,10 +175,9 @@ async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL_UNPOOLED });
   const db = drizzle(pool, { schema });
 
-  // Clean content tables (keeps users, orders and licenses)
+  // Clean content tables (keeps users, orders, licenses and partner servers)
   await db.delete(docPages);
   await db.delete(faqs);
-  await db.delete(partners);
 
   const ids = new Map<string, string>();
   for (const seed of [...PLUGINS, ...ADDONS, ...EXTRAS]) {
@@ -215,14 +214,7 @@ async function main() {
     { sortOrder: 5, question: "Why aren't you on other forums like Spigot or BuiltByBit?", answer: "Selling directly lets us ship updates faster, keep prices lower and give you licenses and downloads in one dashboard." },
   ]);
 
-  await db.insert(partners).values([
-    { name: "BlockHaven", playersAvg: 120, color: "#7c3aed", sortOrder: 1 },
-    { name: "Skyforge", playersAvg: 670, color: "#f97316", sortOrder: 2 },
-    { name: "CraftNova", playersAvg: 176, color: "#eab308", sortOrder: 3 },
-    { name: "Pixelrealm", playersAvg: 550, color: "#ef4444", sortOrder: 4 },
-    { name: "Emberfall", playersAvg: 553, color: "#dc2626", sortOrder: 5 },
-    { name: "Voidline", playersAvg: 265, color: "#3b82f6", sortOrder: 6 },
-  ]);
+  // Partner servers are real ones only: add them from Admin → Community → Partner servers
 
   await db
     .insert(settings)
@@ -230,22 +222,23 @@ async function main() {
       key: "site",
       value: {
         announcements: [
-          { enabled: true, title: "HALLOWEEN SEASON IS HERE!", badge: "10% off", text: "limited time offer!", cta: "SAVE 10% NOW", href: "/products" },
-          { enabled: true, title: "NEW: NOBODIES SHOP", badge: "Launch", text: "AutoSell add-on free for a limited time", cta: "SEE OFFER", href: "/products/nobodies-shop" },
+          { enabled: true, title: "CADILAR BAYRAMI SEZONU BAŞLADI!", badge: "%10 indirim", text: "sınırlı süreli kampanya!", cta: "HEMEN %10 KAZAN", href: "/products" },
+          { enabled: true, title: "YENİ: NOBODIES SHOP", badge: "Yeni", text: "AutoSell ek paketi sınırlı süre için ücretsiz", cta: "FIRSATI GÖR", href: "/products/nobodies-shop" },
         ],
         discountPercent: 10,
-        seasonLabel: "Halloween Season",
+        seasonLabel: "Cadılar Bayramı",
         discordUrl: "https://discord.com",
         supportEmail: "support@nobodies.gg",
+        socials: { youtube: "", twitter: "", instagram: "" },
         navItems: [
-          { label: "Products", href: "/products", visible: true },
-          { label: "Addons", href: "/addons", visible: true },
-          { label: "Docs", href: "/docs", visible: true },
-          { label: "About Us", href: "/about", visible: true },
-          { label: "Help", href: "/help", visible: true },
+          { label: "Ürünler", href: "/products", visible: true },
+          { label: "Ek paketler", href: "/addons", visible: true },
+          { label: "Dokümanlar", href: "/docs", visible: true },
+          { label: "Hakkımızda", href: "/about", visible: true },
+          { label: "Yardım", href: "/help", visible: true },
         ],
         footer: {
-          tagline: "Premium plugins for serious Minecraft servers.",
+          tagline: "Ciddi Minecraft sunucuları için premium eklentiler.",
           showDiscord: true,
           showTwitter: true,
           showInstagram: true,
@@ -268,12 +261,11 @@ async function main() {
   await db
     .insert(coupons)
     .values([
-      { code: "WELCOME10", description: "10% off your first order", type: "percent", amount: 10, perUserLimit: 1 },
-      { code: "CREATOR15", description: "Creator code", type: "percent", amount: 15, creatorName: "ExampleCreator", maxUses: 500 },
+      { code: "WELCOME10", description: "İlk siparişe %10 indirim", type: "percent", amount: 10, perUserLimit: 1 },
     ])
     .onConflictDoNothing();
 
-  console.log(`Seeded ${ids.size} products, docs, FAQs and partners`);
+  console.log(`Seeded ${ids.size} products, docs and FAQs`);
   await pool.end();
 }
 

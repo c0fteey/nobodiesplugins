@@ -10,6 +10,7 @@ import {
   discordSyncLog,
   docPages,
   faqs,
+  licenses,
   orderItems,
   orders,
   partners,
@@ -100,6 +101,16 @@ export async function getUsers() {
     .from(users)
     .leftJoin(orderCounts, eq(orderCounts.userId, users.id))
     .orderBy(desc(users.createdAt));
+}
+
+/** Every license with its product and owner, newest first. */
+export async function getAllLicenses() {
+  return db
+    .select({ license: licenses, productName: products.name, productSlug: products.slug, email: users.email })
+    .from(licenses)
+    .innerJoin(products, eq(products.id, licenses.productId))
+    .innerJoin(users, eq(users.id, licenses.userId))
+    .orderBy(desc(licenses.createdAt));
 }
 
 /** userId -> ids of products they own (completed or not), for the admin "products" dialog. */

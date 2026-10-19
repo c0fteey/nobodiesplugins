@@ -123,6 +123,15 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
           <Field label={t.supportEmail} error={errors.supportEmail?.message}>
             <input {...register("supportEmail")} className={inputCls} />
           </Field>
+          <Field label={t.youtubeUrl} hint={t.socialHint} error={errors.socials?.youtube?.message}>
+            <input {...register("socials.youtube")} placeholder="https://youtube.com/@…" className={inputCls} />
+          </Field>
+          <Field label={t.twitterUrl} hint={t.socialHint} error={errors.socials?.twitter?.message}>
+            <input {...register("socials.twitter")} placeholder="https://x.com/…" className={inputCls} />
+          </Field>
+          <Field label={t.instagramUrl} hint={t.socialHint} error={errors.socials?.instagram?.message}>
+            <input {...register("socials.instagram")} placeholder="https://instagram.com/…" className={inputCls} />
+          </Field>
         </div>
       </Section>
 

@@ -64,6 +64,13 @@
       "when": 1792413589295,
       "tag": "0008_role_thresholds",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792417559955,
+      "tag": "0009_licenses",
+      "breakpoints": true
     }
   ]
 }

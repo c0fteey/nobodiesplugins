@@ -226,8 +226,7 @@ export const site = {
     viewDocs: "Dokümanları gör",
     comingSoon: "Dokümanlar yakında",
     latestBuilds: "SON SÜRÜMLER",
-    buildLabel: (version: string) => `Sürüm v${version}-stable`,
-    defaultChangelog: "Kararlılık iyileştirmeleri ve düzeltmeler",
+    buildLabel: (version: string) => `Sürüm v${version}`,
     resources: "KAYNAKLAR",
     helpCenter: "Yardım merkezi",
     discordCommunity: "Discord topluluğu",
@@ -478,7 +477,7 @@ export const site = {
 
   purchases: {
     title: "Satın aldıklarım",
-    stats: { total: "TOPLAM", plugins: "EKLENTİLER", models: "MODELLER", builds: "YAPILAR" },
+    stats: { total: "TOPLAM", plugins: "EKLENTİLER", addons: "EK PAKETLER", models: "MODELLER", builds: "YAPILAR" },
     searchPlaceholder: "Satın aldıklarında ara...",
     searchLabel: "Satın aldıklarında ara",
     sortLabel: "Satın aldıklarını sırala",
@@ -492,8 +491,17 @@ export const site = {
   },
 
   licenses: {
-    totalActive: "TOPLAM AKTİF LİSANS",
-    sessions: "AKTİF OTURUM",
+    totalActive: "AKTİF LİSANS",
+    revokedCount: (n: number) => `${n} iptal edilmiş`,
+    totalChecks: "TOPLAM DOĞRULAMA",
+    checksHint: "Eklentilerin anahtarını her doğrulaması",
+    lastSeen: (when: string) => `Son görülme: ${when}`,
+    regenerate: "Anahtarı yenile",
+    regenerateConfirm: "Yeni anahtar üretilsin mi? Eski anahtar hemen çalışmayı bırakır; yenisini sunucundaki eklentinin ayarına girmen gerekir.",
+    regenerated: "Yeni anahtar üretildi",
+    howToTitle: "Anahtar nasıl kullanılır?",
+    howToText: "Anahtarı eklentinin config.yml dosyasındaki license alanına yapıştır. Her anahtar yalnızca kendi ürününde çalışır.",
+    recentEmpty: "Henüz doğrulama yok",
     activationsAllTime: (n: number) => `Toplam ${n} aktivasyon`,
     connected: "BAĞLI SUNUCULAR",
     online: (n: number) => `${n} çevrimiçi`,

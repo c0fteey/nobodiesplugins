@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { DiscordIcon, InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/brand/icons";
 import { ContactForm } from "@/components/store/contact-form";
 import { FaqList } from "@/components/store/faq-list";
@@ -7,7 +8,9 @@ import { site } from "@/lang/site";
 
 const t = site.help;
 
-export const metadata: Metadata = { title: site.meta.pages.help };
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("help");
+}
 
 export default async function HelpPage() {
   const [faqs, settings] = await Promise.all([getFaqs(), getSettings()]);
@@ -53,9 +56,21 @@ export default async function HelpPage() {
             >
               <DiscordIcon className="size-5" /> {site.common.joinDiscord}
             </a>
-            <YoutubeIcon className="size-7 text-brand-soft" />
-            <TwitterIcon className="size-6 text-brand-soft" />
-            <InstagramIcon className="size-6 text-brand-soft" />
+            {settings.socials.youtube && (
+              <a href={settings.socials.youtube} target="_blank" rel="noreferrer" aria-label="YouTube">
+                <YoutubeIcon className="size-7 text-brand-soft" />
+              </a>
+            )}
+            {settings.socials.twitter && (
+              <a href={settings.socials.twitter} target="_blank" rel="noreferrer" aria-label="Twitter">
+                <TwitterIcon className="size-6 text-brand-soft" />
+              </a>
+            )}
+            {settings.socials.instagram && (
+              <a href={settings.socials.instagram} target="_blank" rel="noreferrer" aria-label="Instagram">
+                <InstagramIcon className="size-6 text-brand-soft" />
+              </a>
+            )}
           </div>
           <div id="terms" className="scroll-mt-8 rounded-lg bg-white/[0.03] p-5 text-xs leading-relaxed text-white/60">
             <p className="font-semibold text-white/80">{t.termsTitle}</p>

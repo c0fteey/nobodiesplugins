@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeftIcon } from "lucide-react";
 import { getDocBySlug, getDocPages, getProducts } from "@/lib/data/store";
+import { contentMetadata } from "@/lib/seo";
 import { DocContent } from "@/components/store/doc-content";
 import { cn } from "@/lib/utils";
 import { site } from "@/lang/site";
@@ -15,7 +16,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/docs/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const doc = await getDocBySlug(slug);
-  return doc ? { title: site.meta.pages.docTitle(doc.title), description: doc.summary } : {};
+  return doc ? contentMetadata({ title: site.meta.pages.docTitle(doc.title), description: doc.summary, path: `/docs/${doc.slug}` }) : {};
 }
 
 export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {

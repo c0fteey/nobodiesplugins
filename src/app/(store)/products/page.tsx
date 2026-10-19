@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { Suspense } from "react";
 import { ProductGridSkeleton } from "@/components/store/product-grid-skeleton";
 import { getProducts } from "@/lib/data/store";
@@ -9,7 +10,9 @@ import { site } from "@/lang/site";
 
 const t = site.productsPage;
 
-export const metadata: Metadata = { title: site.meta.pages.products };
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("products");
+}
 
 export default async function ProductsPage() {
   const products = await getProducts();

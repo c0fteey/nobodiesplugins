@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getActionUser } from "@/lib/auth-guard";
 import { changePasswordSchema, profileSchema } from "@/lib/validations/auth";
+import { regenerateLicenseKey } from "@/lib/licenses";
 import { site } from "@/lang/site";
 
 const t = site.settings.results;
@@ -46,6 +47,16 @@ export async function changePasswordAction(input: unknown): Promise<AccountResul
   const passwordHash = await bcrypt.hash(parsed.data.newPassword, 12);
   await db.update(users).set({ passwordHash }).where(eq(users.id, user.id));
   return { ok: true, message: t.passwordUpdated };
+}
+
+/** The owner can swap a leaked key for a new one; the old key stops verifying. */
+export async function regenerateMyLicenseAction(id: unknown): Promise<AccountResult> {
+  const user = await getActionUser();
+  if (!user) return { ok: false, error: site.common.notSignedIn };
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success || !(await regenerateLicenseKey(parsed.data, user.id))) return { ok: false, error: site.common.invalidData };
+  revalidatePath("/dashboard/licenses");
+  return { ok: true, message: site.licenses.regenerated };
 }
 
 export async function updatePreferencesAction(input: unknown): Promise<AccountResult> {
