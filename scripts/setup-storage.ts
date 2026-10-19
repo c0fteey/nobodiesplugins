@@ -3,10 +3,12 @@ config({ path: ".env.local" });
 
 import { GetBucketCorsCommand, PutBucketCorsCommand, S3Client } from "@aws-sdk/client-s3";
 
-// Usage: npm run storage:cors -- https://pazaar.com https://www.pazaar.com
-// Lets browsers upload straight to the "media" bucket from these origins.
+// Sites that may upload straight to the "media" bucket from the browser
+const ORIGINS = ["http://localhost:3000", "https://nobodiesplugins.vercel.app"];
+
+// Usage: npm run storage:cors [-- https://extra-domain.com ...]
 async function main() {
-  const origins = ["http://localhost:3000", ...process.argv.slice(2)];
+  const origins = [...ORIGINS, ...process.argv.slice(2)];
   const s3 = new S3Client({ forcePathStyle: true });
 
   await s3.send(
