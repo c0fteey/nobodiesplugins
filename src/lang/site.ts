@@ -33,6 +33,7 @@ export const site = {
     apply: "Uygula",
     save: "Kaydet",
     cancel: "Vazgeç",
+    confirm: "Onayla",
     next: "Sonraki",
     all: "Tümü",
     download: "İndir",

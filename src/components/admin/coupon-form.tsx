@@ -11,7 +11,11 @@ import type { Coupon } from "@/db/schema";
 import { deleteCouponAction, saveCouponAction } from "@/actions/admin";
 import { couponSchema } from "@/lib/validations/store";
 import { PRODUCT_TYPE_LABEL, toDateTimeLocal } from "@/lib/format";
-import { Field, inputCls, Section, Toggle } from "./form-bits";
+import { Field, inputCls, Section, selectCls, Toggle } from "./form-bits";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ChoiceSelect } from "@/components/ui/choice-select";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { admin } from "@/lang/admin";
 
 const t = admin.coupons.form;
@@ -21,6 +25,25 @@ type FormOut = z.output<typeof couponSchema>;
 type ProductOption = { id: string; name: string; type: keyof typeof PRODUCT_TYPE_LABEL };
 
 const nullIfEmpty = (v: unknown) => (v === "" || v == null ? null : v);
+
+const TYPE_OPTIONS = [
+  { value: "percent", label: t.percent },
+  { value: "fixed", label: t.fixed },
+] as const;
+
+function DatePickerField({ value, onChange, invalid }: { value: unknown; onChange: (v: string) => void; invalid?: boolean }) {
+  return (
+    <DateTimePicker
+      value={typeof value === "string" ? value : toDateTimeLocal(value as Date | null)}
+      onChange={onChange}
+      placeholder={admin.common.pickDate}
+      clearLabel={admin.common.clearDate}
+      timeLabel={admin.common.time}
+      invalid={invalid}
+      className={selectCls}
+    />
+  );
+}
 
 function randomCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -96,10 +119,13 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
       <Section title={t.sections.discount}>
         <div className="grid gap-4 md:grid-cols-3">
           <Field label={t.type}>
-            <select {...register("type")} className={inputCls}>
-              <option value="percent">{t.percent}</option>
-              <option value="fixed">{t.fixed}</option>
-            </select>
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <ChoiceSelect value={field.value ?? "percent"} onChange={field.onChange} options={TYPE_OPTIONS} aria-label={t.type} className={selectCls} />
+              )}
+            />
           </Field>
           <Field label={type === "fixed" ? t.amountFixed : t.amountPercent} error={errors.amount?.message}>
             <input type="number" step={type === "fixed" ? "0.01" : "1"} {...register("amount")} className={inputCls} />
@@ -134,10 +160,18 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
       <Section title={t.sections.valid}>
         <div className="grid gap-4 md:grid-cols-2">
           <Field label={t.starts} hint={t.startsHint} error={errors.startsAt?.message}>
-            <input type="datetime-local" {...register("startsAt")} className={inputCls} />
+            <Controller
+              control={control}
+              name="startsAt"
+              render={({ field }) => <DatePickerField value={field.value} onChange={field.onChange} invalid={!!errors.startsAt} />}
+            />
           </Field>
           <Field label={t.expires} hint={t.expiresHint} error={errors.expiresAt?.message}>
-            <input type="datetime-local" {...register("expiresAt")} className={inputCls} />
+            <Controller
+              control={control}
+              name="expiresAt"
+              render={({ field }) => <DatePickerField value={field.value} onChange={field.onChange} invalid={!!errors.expiresAt} />}
+            />
           </Field>
         </div>
         <Controller
@@ -162,7 +196,7 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
                 <div className="grid max-h-56 gap-1 overflow-y-auto rounded-md border border-white/10 p-2 sm:grid-cols-2">
                   {visible.map((p) => (
                     <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-white/5">
-                      <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} />
+                      <Checkbox checked={selected.has(p.id)} onCheckedChange={() => toggle(p.id)} className="data-checked:border-brand data-checked:bg-brand" />
                       <span className="truncate">{p.name}</span>
                       <span className="ml-auto text-[10px] text-white/40">{PRODUCT_TYPE_LABEL[p.type]}</span>
                     </label>
@@ -172,7 +206,7 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
             );
           }}
         />
-        <Toggle label={admin.common.active} {...register("active")} />
+        <Toggle label={admin.common.active} control={control} name="active" />
       </Section>
 
       <div className="flex gap-3">
@@ -183,8 +217,8 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
           <button
             type="button"
             disabled={deleting}
-            onClick={() => {
-              if (!confirm(admin.common.deleteConfirm(coupon.code))) return;
+            onClick={async () => {
+              if (!(await confirmDialog({ title: admin.common.deleteConfirm(coupon.code), confirmLabel: admin.common.delete }))) return;
               startDelete(async () => {
                 const result = await deleteCouponAction(coupon.id);
                 if (!result.ok) return void toast.error(result.error);

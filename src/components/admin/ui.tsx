@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PlusIcon } from "lucide-react";
+import { badgeVariants } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function AdminHeader({
@@ -37,10 +38,12 @@ export function StatusPill({ on, onLabel, offLabel }: { on: boolean; onLabel: st
   return (
     <span
       className={cn(
-        "rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase",
+        badgeVariants({ variant: "outline" }),
+        "gap-1.5 text-[10px] font-bold uppercase",
         on ? "border-success/40 bg-success/10 text-success" : "border-white/15 text-white/50",
       )}
     >
+      <span className={cn("size-1.5 rounded-full", on ? "bg-success" : "bg-white/30")} />
       {on ? onLabel : offLabel}
     </span>
   );

@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { accounts, discordRoleRules, discordSettings, discordSyncLog, orderItems, orders, users } from "@/db/schema";
+import { accounts, discordRoleRules, discordSyncLog, orderItems, orders, users } from "@/db/schema";
 import { admin } from "@/lang/admin";
 
 const m = admin.discord.sync;

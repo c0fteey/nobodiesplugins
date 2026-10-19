@@ -16,8 +16,10 @@ import {
 import type { GuildRole, GuildStatus } from "@/lib/discord";
 import { formatDate } from "@/lib/format";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
-import { Field, inputCls, Section, Toggle } from "./form-bits";
+import { Field, inputCls, Section, selectCls, Toggle } from "./form-bits";
+import { ChoiceSelect } from "@/components/ui/choice-select";
 import { td, th } from "./ui";
 import { admin } from "@/lang/admin";
 import { site } from "@/lang/site";
@@ -139,7 +141,10 @@ export function DiscordAdmin({
                       <button
                         type="button"
                         aria-label={t.deleteRule}
-                        onClick={() => confirm(t.deleteRuleConfirm) && run(() => deleteDiscordRuleAction(rule.id), t.ruleDeleted)}
+                        onClick={async () =>
+                          (await confirmDialog({ title: t.deleteRuleConfirm, confirmLabel: admin.common.delete })) &&
+                          run(() => deleteDiscordRuleAction(rule.id), t.ruleDeleted)
+                        }
                         className="text-white/50 hover:text-destructive"
                       >
                         <Trash2Icon className="size-4" />
@@ -235,7 +240,7 @@ function SetupSection({
 }) {
   const router = useRouter();
   const [saving, startSave] = useTransition();
-  const { register, handleSubmit } = useForm<Config>({ defaultValues: config });
+  const { register, handleSubmit, control } = useForm<Config>({ defaultValues: config });
 
   const onSubmit = (values: Config) =>
     startSave(async () => {
@@ -279,9 +284,9 @@ function SetupSection({
           <input {...register("guildId")} placeholder="123456789012345678" inputMode="numeric" className={inputCls} />
         </Field>
         <div className="flex flex-wrap gap-6">
-          <Toggle label={t.enable} {...register("enabled")} />
-          <Toggle label={t.autoJoin} {...register("autoJoin")} />
-          <Toggle label={t.removeRoles} {...register("removeRoles")} />
+          <Toggle label={t.enable} control={control} name="enabled" />
+          <Toggle label={t.autoJoin} control={control} name="autoJoin" />
+          <Toggle label={t.removeRoles} control={control} name="removeRoles" />
         </div>
         <button type="submit" disabled={saving} className="inline-flex h-10 items-center gap-2 justify-self-start rounded-md bg-brand px-5 text-sm font-semibold text-white disabled:opacity-60">
           {saving && <Loader2Icon className="size-4 animate-spin" />} {t.save}
@@ -310,38 +315,41 @@ function AddRuleForm({
   return (
     <div className="grid items-end gap-3 rounded-lg border border-brand/30 bg-brand/5 p-4 md:grid-cols-[1fr_1fr_auto]">
       <Field label={t.whenOwns}>
-        <select value={condition} onChange={(e) => setCondition(e.target.value)} className={inputCls}>
-          <optgroup label={t.groupGeneral}>
-            <option value={EVERY_CUSTOMER}>{t.everyCustomerOption}</option>
-          </optgroup>
-          {siteRoles.length > 0 && (
-            <optgroup label={t.groupSiteRoles}>
-              {siteRoles.map((r) => (
-                <option key={r.key} value={ROLE_PREFIX + r.key}>
-                  {t.siteRoleOption(r.name)}
-                </option>
-              ))}
-            </optgroup>
-          )}
-          <optgroup label={t.groupProducts}>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({site.productTypes[p.type as keyof typeof site.productTypes] ?? p.type})
-              </option>
-            ))}
-          </optgroup>
-        </select>
+        <ChoiceSelect
+          value={condition}
+          onChange={setCondition}
+          aria-label={t.whenOwns}
+          className={selectCls}
+          groups={[
+            { label: t.groupGeneral, options: [{ value: EVERY_CUSTOMER, label: t.everyCustomerOption }] },
+            ...(siteRoles.length
+              ? [{ label: t.groupSiteRoles, options: siteRoles.map((r) => ({ value: ROLE_PREFIX + r.key, label: r.name, color: r.color })) }]
+              : []),
+            {
+              label: t.groupProducts,
+              options: products.map((p) => ({
+                value: p.id,
+                label: p.name,
+                hint: site.productTypes[p.type as keyof typeof site.productTypes] ?? p.type,
+              })),
+            },
+          ]}
+        />
       </Field>
       <Field label={t.giveRole}>
-        <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className={inputCls}>
-          <option value="">{t.chooseRole}</option>
-          {roles.map((r) => (
-            <option key={r.id} value={r.id} disabled={!r.assignable}>
-              {r.name}
-              {!r.assignable && t.aboveBot}
-            </option>
-          ))}
-        </select>
+        <ChoiceSelect
+          value={roleId}
+          onChange={setRoleId}
+          placeholder={t.chooseRole}
+          aria-label={t.giveRole}
+          className={selectCls}
+          options={roles.map((r) => ({
+            value: r.id,
+            label: r.name + (r.assignable ? "" : t.aboveBot),
+            color: r.color,
+            disabled: !r.assignable,
+          }))}
+        />
       </Field>
       <button
         type="button"

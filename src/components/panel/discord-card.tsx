@@ -6,6 +6,7 @@ import { Loader2Icon, RefreshCwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { connectDiscordAction, disconnectDiscordAction, resyncMyDiscordAction, type DiscordResult } from "@/actions/discord";
 import { DiscordIcon } from "@/components/brand/icons";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { site } from "@/lang/site";
 
 const t = site.discord;
@@ -62,7 +63,7 @@ export function DiscordCard({ available, username }: { available: boolean; usern
             <button
               type="button"
               disabled={pending}
-              onClick={() => confirm(t.disconnectConfirm) && run(disconnectDiscordAction)}
+              onClick={async () => (await confirmDialog({ title: t.disconnectConfirm, confirmLabel: t.disconnect })) && run(disconnectDiscordAction)}
               className={`${button} text-white/60 hover:text-destructive`}
             >
               {t.disconnect}

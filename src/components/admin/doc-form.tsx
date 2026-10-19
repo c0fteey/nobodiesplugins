@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Loader2Icon, Trash2Icon } from "lucide-react";
@@ -12,10 +12,14 @@ import { deleteDocAction, saveDocAction } from "@/actions/admin";
 import { docSchema } from "@/lib/validations/store";
 import { slugify } from "@/lib/format";
 import { DocContent } from "@/components/store/doc-content";
-import { Field, inputCls, Section, textareaCls, Toggle } from "./form-bits";
+import { Field, inputCls, Section, selectCls, textareaCls, Toggle } from "./form-bits";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
+import { ChoiceSelect } from "@/components/ui/choice-select";
 import { admin } from "@/lang/admin";
 
 const t = admin.docs.form;
+// "No plugin" is a real choice (a Resources page), so it gets its own value
+const NO_PLUGIN = "__resources__";
 
 type FormIn = z.input<typeof docSchema>;
 type FormOut = z.output<typeof docSchema>;
@@ -63,14 +67,19 @@ export function DocForm({ doc, plugins }: { doc: DocPage | null; plugins: { id: 
               <input {...register("slug")} className={inputCls} aria-invalid={!!errors.slug} />
             </Field>
             <Field label={t.plugin} hint={t.pluginHint}>
-              <select {...register("productId", { setValueAs: (val) => (val === "" ? null : val) })} className={inputCls}>
-                <option value="">{t.noPlugin}</option>
-                {plugins.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                control={control}
+                name="productId"
+                render={({ field }) => (
+                  <ChoiceSelect
+                    value={field.value ?? NO_PLUGIN}
+                    onChange={(v) => field.onChange(v === NO_PLUGIN ? null : v)}
+                    options={[{ value: NO_PLUGIN, label: t.noPlugin }, ...plugins.map((p) => ({ value: p.id, label: p.name }))]}
+                    aria-label={t.plugin}
+                    className={selectCls}
+                  />
+                )}
+              />
             </Field>
             <Field label={admin.common.sortOrder}>
               <input type="number" {...register("sortOrder")} className={inputCls} />
@@ -82,7 +91,7 @@ export function DocForm({ doc, plugins }: { doc: DocPage | null; plugins: { id: 
           <Field label={t.content} error={errors.content?.message}>
             <textarea {...register("content")} rows={18} className={`${textareaCls} font-mono text-xs`} />
           </Field>
-          <Toggle label={admin.common.published} {...register("published")} />
+          <Toggle label={admin.common.published} control={control} name="published" />
         </Section>
         <div className="flex gap-3">
           <button type="submit" disabled={saving} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-brand font-semibold text-white transition hover:bg-brand/85 disabled:opacity-60">
@@ -92,8 +101,8 @@ export function DocForm({ doc, plugins }: { doc: DocPage | null; plugins: { id: 
             <button
               type="button"
               disabled={deleting}
-              onClick={() => {
-                if (!confirm(admin.common.deleteConfirm(doc.title))) return;
+              onClick={async () => {
+                if (!(await confirmDialog({ title: admin.common.deleteConfirm(doc.title), confirmLabel: admin.common.delete }))) return;
                 startDelete(async () => {
                   const result = await deleteDocAction(doc.id);
                   if (!result.ok) return void toast.error(result.error);

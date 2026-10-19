@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useForm, useWatch, type FieldError, type UseFormRegisterReturn } from "react-hook-form";
+import { Controller, useForm, useWatch, type FieldError, type UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckIcon, CircleAlertIcon, EyeIcon, EyeOffIcon, Loader2Icon, LockIcon, MailIcon, type LucideIcon } from "lucide-react";
@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { signInAction, signUpAction } from "@/actions/auth";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const checkboxCls = "size-[18px] rounded-[5px] data-checked:border-brand data-checked:bg-brand";
 import { site } from "@/lang/site";
 import {
   signInSchema,
@@ -122,6 +125,7 @@ export function LoginForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<SignInInput>({
     resolver: zodResolver(signInSchema),
@@ -176,7 +180,12 @@ export function LoginForm() {
         />
       </div>
       <label className="mt-4 flex w-fit cursor-pointer items-center gap-2.5 text-sm text-white/70 select-none">
-        <input type="checkbox" {...register("remember")} /> {t.login.remember}
+        <Controller
+          control={control}
+          name="remember"
+          render={({ field }) => <Checkbox checked={!!field.value} onCheckedChange={field.onChange} className={checkboxCls} />}
+        />
+        {t.login.remember}
       </label>
       <SubmitButton pending={pending}>{t.login.submit}</SubmitButton>
     </form>
@@ -256,7 +265,18 @@ export function RegisterForm() {
         />
       </div>
       <label className="mt-5 flex cursor-pointer items-start gap-2.5 text-sm text-white/70 select-none">
-        <input type="checkbox" {...register("acceptTerms")} className="mt-0.5" />
+        <Controller
+          control={control}
+          name="acceptTerms"
+          render={({ field }) => (
+            <Checkbox
+              checked={!!field.value}
+              onCheckedChange={field.onChange}
+              aria-invalid={!!errors.acceptTerms}
+              className={`${checkboxCls} mt-0.5`}
+            />
+          )}
+        />
         <span>
           {t.register.acceptBefore}
           <Link href="/help#terms" className="font-medium text-brand-soft hover:underline">

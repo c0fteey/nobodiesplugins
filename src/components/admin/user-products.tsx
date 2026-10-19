@@ -9,7 +9,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { admin } from "@/lang/admin";
 import { site } from "@/lang/site";
-import { inputCls } from "./form-bits";
+import { selectCls } from "./form-bits";
+import { ChoiceSelect } from "@/components/ui/choice-select";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 
 const t = admin.users;
 
@@ -52,14 +54,14 @@ export function UserProducts({ userId, who, owned, products }: { userId: string;
         </DialogHeader>
 
         <div className="flex gap-2">
-          <select value={choice} onChange={(e) => setChoice(e.target.value)} className={inputCls} aria-label={t.grant}>
-            <option value="">{t.grantChoose}</option>
-            {grantable.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({site.productTypes[p.type]})
-              </option>
-            ))}
-          </select>
+          <ChoiceSelect
+            value={choice}
+            onChange={setChoice}
+            options={grantable.map((p) => ({ value: p.id, label: p.name, hint: site.productTypes[p.type] }))}
+            placeholder={t.grantChoose}
+            aria-label={t.grant}
+            className={selectCls}
+          />
           <button
             type="button"
             disabled={!choice || pending}
@@ -85,7 +87,10 @@ export function UserProducts({ userId, who, owned, products }: { userId: string;
                   <button
                     type="button"
                     disabled={pending}
-                    onClick={() => confirm(t.revokeConfirm(p.name)) && run(() => revokeProductAction({ userId, productId: p.id }), t.revoked)}
+                    onClick={async () =>
+                      (await confirmDialog({ title: t.revokeConfirm(p.name), confirmLabel: t.revoke })) &&
+                      run(() => revokeProductAction({ userId, productId: p.id }), t.revoked)
+                    }
                     className="inline-flex items-center gap-1 text-xs text-white/50 transition hover:text-destructive"
                   >
                     <Undo2Icon className="size-3.5" /> {t.revoke}

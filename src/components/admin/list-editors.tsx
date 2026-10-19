@@ -18,6 +18,7 @@ import {
 } from "@/actions/admin";
 import { faqSchema, partnerSchema } from "@/lib/validations/store";
 import { ImageUploadButton } from "@/components/media/image-upload";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { Field, inputCls, textareaCls, Toggle } from "./form-bits";
 import { admin } from "@/lang/admin";
 
@@ -45,7 +46,7 @@ type FaqOut = z.output<typeof faqSchema>;
 
 function FaqForm({ faq, onDone }: { faq?: Faq; onDone: () => void }) {
   const { pending, run } = useAdminMutation();
-  const { register, handleSubmit, formState: { errors } } = useForm<FaqIn, unknown, FaqOut>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FaqIn, unknown, FaqOut>({
     resolver: zodResolver(faqSchema),
     defaultValues: {
       id: faq?.id,
@@ -72,7 +73,7 @@ function FaqForm({ faq, onDone }: { faq?: Faq; onDone: () => void }) {
         <Field label={admin.common.sortOrder} className="w-28">
           <input type="number" {...register("sortOrder")} className={inputCls} />
         </Field>
-        <Toggle label={admin.common.published} {...register("published")} />
+        <Toggle label={admin.common.published} control={control} name="published" />
         <div className="ml-auto flex gap-2">
           <button type="button" onClick={onDone} className="h-9 rounded-md px-4 text-sm text-white/70 hover:text-white">{admin.common.cancel}</button>
           <button type="submit" disabled={pending} className="flex h-9 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white">
@@ -120,7 +121,9 @@ export function FaqEditor({ faqs }: { faqs: Faq[] }) {
             <button
               type="button"
               aria-label={admin.common.delete}
-              onClick={() => confirm(tf.deleteConfirm) && run(() => deleteFaqAction(faq.id), tf.deleted)}
+              onClick={async () =>
+                (await confirmDialog({ title: tf.deleteConfirm, confirmLabel: admin.common.delete })) && run(() => deleteFaqAction(faq.id), tf.deleted)
+              }
               className="text-white/60 hover:text-destructive"
             >
               <Trash2Icon className="size-4" />
@@ -223,7 +226,10 @@ export function PartnerEditor({ partners }: { partners: Partner[] }) {
             <button
               type="button"
               aria-label={admin.common.delete}
-              onClick={() => confirm(admin.common.deleteConfirm(p.name)) && run(() => deletePartnerAction(p.id), tp.deleted)}
+              onClick={async () =>
+                (await confirmDialog({ title: admin.common.deleteConfirm(p.name), confirmLabel: admin.common.delete })) &&
+                run(() => deletePartnerAction(p.id), tp.deleted)
+              }
               className="text-white/60 hover:text-destructive"
             >
               <Trash2Icon className="size-4" />

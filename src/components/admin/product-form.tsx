@@ -2,11 +2,13 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { Controller, FormProvider, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { CircleAlertIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
+import { ChoiceSelect } from "@/components/ui/choice-select";
 import { toast } from "sonner";
 import type { Product } from "@/db/schema";
 import { deleteProductAction, saveProductAction } from "@/actions/admin";
@@ -15,11 +17,14 @@ import { formatPrice, slugify } from "@/lib/format";
 import { ProductArt } from "@/components/store/product-art";
 import { ImageUploadButton } from "@/components/media/image-upload";
 import { BlocksEditor, HighlightsEditor } from "./blocks-editor";
-import { Field, inputCls, Section, textareaCls, Toggle } from "./form-bits";
+import { Field, inputCls, Section, selectCls, textareaCls, Toggle } from "./form-bits";
 import { admin } from "@/lang/admin";
 import { site } from "@/lang/site";
 
 const t = admin.products.form;
+
+const TYPE_OPTIONS = (["plugin", "addon", "model", "build"] as const).map((value) => ({ value, label: site.productTypes[value] }));
+const BADGE_OPTIONS = (["none", "sale", "new"] as const).map((value) => ({ value, label: t.badges[value] }));
 
 type FormIn = z.input<typeof productSchema>;
 type FormOut = z.output<typeof productSchema>;
@@ -73,8 +78,9 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
       router.push("/admin/products");
     });
 
-  const onDelete = () => {
-    if (!product || !confirm(admin.common.deleteConfirmPermanent(product.name))) return;
+  const onDelete = async () => {
+    if (!product) return;
+    if (!(await confirmDialog({ title: admin.common.deleteConfirmPermanent(product.name), confirmLabel: admin.common.delete }))) return;
     startDelete(async () => {
       const result = await deleteProductAction(product.id);
       if (!result.ok) return void toast.error(result.error);
@@ -107,27 +113,31 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
               <input {...register("slug")} className={inputCls} aria-invalid={!!errors.slug} />
             </Field>
             <Field label={t.type} error={errors.type?.message}>
-              <select {...register("type")} className={inputCls}>
-                <option value="plugin">{site.productTypes.plugin}</option>
-                <option value="addon">{site.productTypes.addon}</option>
-                <option value="model">{site.productTypes.model}</option>
-                <option value="build">{site.productTypes.build}</option>
-              </select>
+              <Controller
+                control={control}
+                name="type"
+                render={({ field }) => (
+                  <ChoiceSelect value={field.value ?? "plugin"} onChange={field.onChange} options={TYPE_OPTIONS} aria-label={t.type} className={selectCls} />
+                )}
+              />
             </Field>
             {v.type === "addon" ? (
               <Field label={t.parent} error={errors.parentId?.message}>
-                <select
-                  {...register("parentId", { setValueAs: (val) => (val === "" ? null : val) })}
-                  className={inputCls}
-                  aria-invalid={!!errors.parentId}
-                >
-                  <option value="">{t.choosePlugin}</option>
-                  {plugins.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  control={control}
+                  name="parentId"
+                  render={({ field }) => (
+                    <ChoiceSelect
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      options={plugins.map((p) => ({ value: p.id, label: p.name }))}
+                      placeholder={t.choosePlugin}
+                      aria-label={t.parent}
+                      aria-invalid={!!errors.parentId}
+                      className={selectCls}
+                    />
+                  )}
+                />
               </Field>
             ) : (
               <Field label={t.tagline} hint={t.taglineHint} error={errors.tagline?.message}>
@@ -158,11 +168,13 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
               />
             </Field>
             <Field label={t.badge}>
-              <select {...register("badge")} className={inputCls}>
-                <option value="none">{t.badges.none}</option>
-                <option value="sale">{t.badges.sale}</option>
-                <option value="new">{t.badges.new}</option>
-              </select>
+              <Controller
+                control={control}
+                name="badge"
+                render={({ field }) => (
+                  <ChoiceSelect value={field.value ?? "none"} onChange={field.onChange} options={BADGE_OPTIONS} aria-label={t.badge} className={selectCls} />
+                )}
+              />
             </Field>
           </div>
         </Section>
@@ -208,8 +220,8 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
             <input {...register("tags")} className={inputCls} />
           </Field>
           <div className="flex gap-6">
-            <Toggle label={t.publishedToggle} {...register("published")} />
-            <Toggle label={t.featuredToggle} {...register("featured")} />
+            <Toggle label={t.publishedToggle} control={control} name="published" />
+            <Toggle label={t.featuredToggle} control={control} name="featured" />
           </div>
         </Section>
 

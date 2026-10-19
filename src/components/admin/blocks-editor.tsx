@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
+import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowDownIcon, ArrowUpIcon, ChevronDownIcon, CopyIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import { BLOCK_ICONS, BLOCK_LABELS, emptyBlock, type BlockType } from "@/lib/content-blocks";
 import { cn } from "@/lib/utils";
 import { ImageUploadButton } from "@/components/media/image-upload";
-import { Field, inputCls, textareaCls, Toggle } from "./form-bits";
+import { Field, inputCls, selectCls, textareaCls, Toggle } from "./form-bits";
+import { ChoiceSelect } from "@/components/ui/choice-select";
+import { BlockIcon } from "@/components/store/product-page/block-icon";
 import { IconBtn } from "./settings-form";
 import { admin } from "@/lang/admin";
 
@@ -45,6 +47,8 @@ const ITEM_FIELDS: Partial<Record<BlockType, { key: string; label: string; texta
     { key: "answer", label: f.answer, textarea: true },
   ],
 };
+
+const ICON_OPTIONS = BLOCK_ICONS.map((icon) => ({ value: icon, label: icon, icon: <BlockIcon name={icon} className="size-4 text-brand-soft" /> }));
 
 const EMPTY_ITEM: Partial<Record<BlockType, Record<string, unknown>>> = {
   features: { icon: "sparkles", title: "", text: "" },
@@ -155,7 +159,7 @@ export function BlocksEditor() {
 }
 
 function BlockFields({ index, type }: { index: number; type: BlockType }) {
-  const { register, setValue } = useFormContext<LooseForm>();
+  const { register, setValue, control } = useFormContext<LooseForm>();
   const p = (key: string) => `content.${index}.${key}` as `content.${number}.${string}`;
 
   return (
@@ -184,7 +188,7 @@ function BlockFields({ index, type }: { index: number; type: BlockType }) {
             </div>
           </Field>
           <div className="flex items-end pb-2">
-            <Toggle label={t.imageLeft} {...register(p("imageLeft"))} />
+            <Toggle label={t.imageLeft} control={control} name={p("imageLeft") as never} />
           </div>
         </div>
       )}
@@ -214,11 +218,20 @@ function ItemsEditor({ index, type }: { index: number; type: BlockType }) {
             <div className={cn("grid flex-1 gap-2", columns.length > 1 && "md:grid-cols-[repeat(auto-fit,minmax(140px,1fr))]")}>
               {columns.map((col) =>
                 col.icon ? (
-                  <select key={col.key} {...register(`${name}.${k}.${col.key}` as never)} className={inputCls} aria-label={col.label}>
-                    {BLOCK_ICONS.map((icon) => (
-                      <option key={icon} value={icon}>{icon}</option>
-                    ))}
-                  </select>
+                  <Controller
+                    key={col.key}
+                    control={control}
+                    name={`${name}.${k}.${col.key}` as never}
+                    render={({ field }) => (
+                      <ChoiceSelect
+                        value={(field.value as string) ?? "sparkles"}
+                        onChange={field.onChange}
+                        options={ICON_OPTIONS}
+                        aria-label={col.label}
+                        className={selectCls}
+                      />
+                    )}
+                  />
                 ) : col.textarea ? (
                   <textarea key={col.key} rows={2} placeholder={col.label} aria-label={col.label} {...register(`${name}.${k}.${col.key}` as never)} className={textareaCls} />
                 ) : col.image ? (

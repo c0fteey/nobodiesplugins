@@ -77,6 +77,10 @@ export const admin = {
     deleteConfirm: (name: string) => `"${name}" silinsin mi?`,
     deleteConfirmPermanent: (name: string) => `${name} silinsin mi? Bu işlem geri alınamaz.`,
     editTitle: (name: string) => `Düzenle: ${name}`,
+    pickDate: "Tarih seç",
+    clearDate: "Tarihi temizle",
+    time: "Saat",
+    none: "Yok",
     columns: {
       date: "TARİH",
       customer: "MÜŞTERİ",

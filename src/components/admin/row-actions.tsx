@@ -1,11 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckIcon, Loader2Icon, RotateCcwIcon } from "lucide-react";
 import { toast } from "sonner";
 import { setMessageHandledAction, setUserRoleAction } from "@/actions/admin";
 import { admin } from "@/lang/admin";
+import { ChoiceSelect } from "@/components/ui/choice-select";
 
 export function RoleSelect({
   userId,
@@ -20,35 +21,33 @@ export function RoleSelect({
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const current = roles.find((r) => r.key === role);
+  // Shown optimistically; snaps back if the server refuses
+  const [value, setValue] = useState(role);
+
+  const change = (next: string) => {
+    setValue(next);
+    start(async () => {
+      const result = await setUserRoleAction({ userId, role: next });
+      if (!result.ok) {
+        setValue(role);
+        return void toast.error(result.error);
+      }
+      toast.success(admin.users.roleSet(roles.find((r) => r.key === next)?.name ?? next));
+      router.refresh();
+    });
+  };
 
   return (
     <span className="inline-flex items-center gap-2">
-      <span className="size-2 shrink-0 rounded-full" style={{ background: current?.color }} />
-      <select
-        defaultValue={role}
+      <ChoiceSelect
+        value={value}
+        onChange={change}
         disabled={disabled || pending}
         title={disabled ? admin.users.ownRole : undefined}
-        onChange={(e) => {
-          const next = e.target.value;
-          start(async () => {
-            const result = await setUserRoleAction({ userId, role: next });
-            if (!result.ok) {
-              e.target.value = role;
-              return void toast.error(result.error);
-            }
-            toast.success(admin.users.roleSet(roles.find((r) => r.key === next)?.name ?? next));
-            router.refresh();
-          });
-        }}
-        className="h-8 rounded-md border border-white/10 bg-[#0f0f0f] px-2 text-xs outline-none focus:border-brand disabled:opacity-50"
-      >
-        {roles.map((r) => (
-          <option key={r.key} value={r.key}>
-            {r.name}
-          </option>
-        ))}
-      </select>
+        aria-label={admin.users.columns.role}
+        options={roles.map((r) => ({ value: r.key, label: r.name, color: r.color }))}
+        className="h-8 w-44 rounded-md border-white/10 bg-[#0f0f0f] px-2.5 text-xs dark:bg-[#0f0f0f] disabled:opacity-50"
+      />
       {pending && <Loader2Icon className="size-3.5 animate-spin text-white/60" />}
     </span>
   );

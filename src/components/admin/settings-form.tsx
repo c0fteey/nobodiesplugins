@@ -13,6 +13,7 @@ import { saveSettingsAction } from "@/actions/admin";
 import { settingsSchema } from "@/lib/validations/store";
 import { Field, inputCls, Section, Toggle } from "./form-bits";
 import { admin } from "@/lang/admin";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const t = admin.settings;
 
@@ -88,7 +89,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
                     <input {...register(`announcements.${i}.href`)} className={inputCls} />
                   </Field>
                   <div className="flex items-end justify-between gap-2 pb-1">
-                    <Toggle label={admin.common.enabled} {...register(`announcements.${i}.enabled`)} />
+                    <Toggle label={admin.common.enabled} control={control} name={`announcements.${i}.enabled` as const} />
                     <span className="flex gap-1">
                       <IconBtn label={admin.common.moveUp} disabled={i === 0} onClick={() => move(i, i - 1)}><ArrowUpIcon className="size-4" /></IconBtn>
                       <IconBtn label={admin.common.moveDown} disabled={i === fields.length - 1} onClick={() => move(i, i + 1)}><ArrowDownIcon className="size-4" /></IconBtn>
@@ -193,9 +194,9 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
             <input {...register("footer.tagline")} className={inputCls} placeholder={t.taglinePlaceholder} />
           </Field>
           <div className="flex flex-wrap gap-6">
-            <Toggle label={t.showDiscord} {...register("footer.showDiscord")} />
-            <Toggle label={t.showTwitter} {...register("footer.showTwitter")} />
-            <Toggle label={t.showInstagram} {...register("footer.showInstagram")} />
+            <Toggle label={t.showDiscord} control={control} name="footer.showDiscord" />
+            <Toggle label={t.showTwitter} control={control} name="footer.showTwitter" />
+            <Toggle label={t.showInstagram} control={control} name="footer.showInstagram" />
           </div>
         </div>
       </Section>
@@ -221,15 +222,21 @@ export function IconBtn({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-      className={`grid size-8 place-items-center rounded-md border border-white/10 transition disabled:opacity-30 ${danger ? "text-white/60 hover:border-destructive/50 hover:text-destructive" : "text-white/60 hover:text-white"}`}
-    >
-      {children}
-    </button>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            aria-label={label}
+            disabled={disabled}
+            onClick={onClick}
+            className={`grid size-8 place-items-center rounded-md border border-white/10 transition disabled:opacity-30 ${danger ? "text-white/60 hover:border-destructive/50 hover:text-destructive" : "text-white/60 hover:text-white"}`}
+          />
+        }
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }

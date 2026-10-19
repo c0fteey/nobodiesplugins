@@ -1,8 +1,15 @@
+"use client";
+
+import { useController, type Control, type FieldValues, type Path } from "react-hook-form";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 export const inputCls =
   "h-10 w-full rounded-md border border-white/10 bg-[#0f0f0f] px-3 text-sm outline-none transition placeholder:text-white/30 focus:border-brand aria-invalid:border-destructive";
 export const textareaCls = cn(inputCls, "h-auto min-h-24 py-2 leading-relaxed");
+// Trigger look for shadcn Select / date pickers inside admin forms, matching inputCls
+export const selectCls =
+  "h-10 rounded-md border-white/10 bg-[#0f0f0f] px-3 text-sm hover:border-white/20 dark:bg-[#0f0f0f] dark:hover:bg-[#141414] aria-invalid:border-destructive";
 
 export function Field({
   label,
@@ -26,11 +33,17 @@ export function Field({
   );
 }
 
-/** On/off setting, styled as a switch (see `.switch` in globals.css). */
-export function Toggle({ label, ...props }: { label: string } & React.ComponentProps<"input">) {
+/** On/off form field rendered as the shadcn Switch. */
+export function Toggle<T extends FieldValues>({ label, control, name }: { label: string; control: Control<T>; name: Path<T> }) {
+  const { field } = useController({ control, name });
   return (
-    <label className="flex cursor-pointer items-center gap-2.5 text-sm">
-      <input type="checkbox" role="switch" className="switch" {...props} />
+    <label className="flex cursor-pointer items-center gap-2.5 text-sm select-none">
+      <Switch
+        checked={!!field.value}
+        onCheckedChange={field.onChange}
+        onBlur={field.onBlur}
+        className="data-checked:bg-brand"
+      />
       {label}
     </label>
   );

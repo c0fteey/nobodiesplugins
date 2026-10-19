@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Loader2Icon, Trash2Icon } from "lucide-react";
@@ -11,7 +11,10 @@ import type { Campaign } from "@/db/schema";
 import { deleteCampaignAction, saveCampaignAction } from "@/actions/admin";
 import { campaignSchema } from "@/lib/validations/store";
 import { formatPrice, toDateTimeLocal } from "@/lib/format";
-import { Field, inputCls, Section, Toggle } from "./form-bits";
+import { Field, inputCls, Section, selectCls, Toggle } from "./form-bits";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
+import { ChoiceSelect } from "@/components/ui/choice-select";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { admin } from "@/lang/admin";
 
 const t = admin.campaigns.form;
@@ -19,6 +22,20 @@ const t = admin.campaigns.form;
 type FormIn = z.input<typeof campaignSchema>;
 type FormOut = z.output<typeof campaignSchema>;
 type ProductOption = { id: string; name: string; priceCents: number };
+
+function DatePickerField({ value, onChange, invalid }: { value: unknown; onChange: (v: string) => void; invalid?: boolean }) {
+  return (
+    <DateTimePicker
+      value={typeof value === "string" ? value : toDateTimeLocal(value as Date | null)}
+      onChange={onChange}
+      placeholder={admin.common.pickDate}
+      clearLabel={admin.common.clearDate}
+      timeLabel={admin.common.time}
+      invalid={invalid}
+      className={selectCls}
+    />
+  );
+}
 
 export function CampaignForm({ campaign, products }: { campaign: Campaign | null; products: ProductOption[] }) {
   const router = useRouter();
@@ -61,20 +78,38 @@ export function CampaignForm({ campaign, products }: { campaign: Campaign | null
         <Section title={t.sections.offer}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label={t.trigger} error={errors.triggerProductId?.message}>
-              <select {...register("triggerProductId")} className={inputCls}>
-                <option value="">{admin.common.chooseProduct}</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+              <Controller
+                control={control}
+                name="triggerProductId"
+                render={({ field }) => (
+                  <ChoiceSelect
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={products.map((p) => ({ value: p.id, label: p.name }))}
+                    placeholder={admin.common.chooseProduct}
+                    aria-label={t.trigger}
+                    aria-invalid={!!errors.triggerProductId}
+                    className={selectCls}
+                  />
+                )}
+              />
             </Field>
             <Field label={t.reward} error={errors.rewardProductId?.message}>
-              <select {...register("rewardProductId")} className={inputCls}>
-                <option value="">{admin.common.chooseProduct}</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} ({formatPrice(p.priceCents)})</option>
-                ))}
-              </select>
+              <Controller
+                control={control}
+                name="rewardProductId"
+                render={({ field }) => (
+                  <ChoiceSelect
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    options={products.map((p) => ({ value: p.id, label: p.name, hint: formatPrice(p.priceCents), disabled: p.id === v.triggerProductId }))}
+                    placeholder={admin.common.chooseProduct}
+                    aria-label={t.reward}
+                    aria-invalid={!!errors.rewardProductId}
+                    className={selectCls}
+                  />
+                )}
+              />
             </Field>
           </div>
         </Section>
@@ -99,13 +134,21 @@ export function CampaignForm({ campaign, products }: { campaign: Campaign | null
         <Section title={t.sections.schedule}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label={t.starts} hint={t.startsHint} error={errors.startsAt?.message}>
-              <input type="datetime-local" {...register("startsAt")} className={inputCls} />
+              <Controller
+                control={control}
+                name="startsAt"
+                render={({ field }) => <DatePickerField value={field.value} onChange={field.onChange} invalid={!!errors.startsAt} />}
+              />
             </Field>
             <Field label={t.ends} hint={t.endsHint} error={errors.endsAt?.message}>
-              <input type="datetime-local" {...register("endsAt")} className={inputCls} />
+              <Controller
+                control={control}
+                name="endsAt"
+                render={({ field }) => <DatePickerField value={field.value} onChange={field.onChange} invalid={!!errors.endsAt} />}
+              />
             </Field>
           </div>
-          <Toggle label={admin.common.active} {...register("active")} />
+          <Toggle label={admin.common.active} control={control} name="active" />
         </Section>
 
         <div className="flex gap-3">
@@ -116,8 +159,8 @@ export function CampaignForm({ campaign, products }: { campaign: Campaign | null
             <button
               type="button"
               disabled={deleting}
-              onClick={() => {
-                if (!confirm(admin.common.deleteConfirm(campaign.name))) return;
+              onClick={async () => {
+                if (!(await confirmDialog({ title: admin.common.deleteConfirm(campaign.name), confirmLabel: admin.common.delete }))) return;
                 startDelete(async () => {
                   const result = await deleteCampaignAction(campaign.id);
                   if (!result.ok) return void toast.error(result.error);

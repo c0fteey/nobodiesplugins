@@ -9,6 +9,7 @@ import { deleteRoleAction, recalcRolesAction, saveRoleAction, type AdminResult }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { admin } from "@/lang/admin";
 import { inputCls } from "./form-bits";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 
 const t = admin.roles;
 
@@ -156,7 +157,10 @@ function RoleRowItem({ row: { role, users } }: { row: RoleRow }) {
               disabled={pending}
               aria-label={admin.common.delete}
               title={admin.common.delete}
-              onClick={() => confirm(t.deleteConfirm(role.name, count)) && run(() => deleteRoleAction(role.key), t.deleted)}
+              onClick={async () =>
+                (await confirmDialog({ title: t.deleteConfirm(role.name, count), confirmLabel: admin.common.delete })) &&
+                run(() => deleteRoleAction(role.key), t.deleted)
+              }
               className="grid size-8 place-items-center rounded-md border border-white/10 text-white/60 transition hover:border-destructive/50 hover:text-destructive"
             >
               <Trash2Icon className="size-4" />
