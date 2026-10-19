@@ -269,6 +269,11 @@
   .scrollbar-none {
     scrollbar-width: none;
   }
+  /* Slim scrollbar for panels that scroll on their own (product filters) */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.15) transparent;
+  }
   /* Loading placeholder: a soft highlight sweeps left to right */
   .shimmer {
     background-color: var(--muted);

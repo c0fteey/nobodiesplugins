@@ -78,7 +78,8 @@ export function ProductBrowser({
 
   return (
     <div className="container-page grid gap-8 py-16 lg:grid-cols-[230px_1fr]">
-      <aside className="h-fit rounded-xl bg-[#1a1a1c] p-4 text-sm lg:sticky lg:top-6">
+      {/* Sticks right under the 68px site header and scrolls on its own when taller than the screen */}
+      <aside className="scrollbar-thin h-fit self-start rounded-xl bg-[#1a1a1c] p-4 text-sm lg:sticky lg:top-[84px] lg:max-h-[calc(100dvh-100px)] lg:overflow-y-auto lg:overscroll-contain">
         <div className="relative">
           <input
             value={query}
