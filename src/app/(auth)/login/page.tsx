@@ -8,13 +8,9 @@ export const metadata: Metadata = { title: "Login" };
 export default function LoginPage() {
   return (
     <AuthLayout
-      heading={
-        <>
-          Welcome back!
-          <br />
-          Please log in now
-        </>
-      }
+      title="Welcome back"
+      subtitle="Log in to download your plugins and manage your licenses."
+      switchTo={{ prompt: "New here?", cta: "Create an account", href: "/register" }}
       oauthLabel="Login with"
       side={{
         title: "New here?",

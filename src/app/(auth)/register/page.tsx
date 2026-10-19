@@ -7,13 +7,9 @@ export const metadata: Metadata = { title: "Sign up" };
 export default function RegisterPage() {
   return (
     <AuthLayout
-      heading={
-        <>
-          Welcome!
-          <br />
-          Please sign up now
-        </>
-      }
+      title="Create your account"
+      subtitle="Get instant access to your downloads, license keys and Discord roles."
+      switchTo={{ prompt: "Already have an account?", cta: "Log in", href: "/login" }}
       oauthLabel="Sign up with"
       side={{
         title: "Already registered?",
