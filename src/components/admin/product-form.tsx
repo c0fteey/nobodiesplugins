@@ -76,6 +76,8 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
       const result = await saveProductAction(values);
       if (!result.ok) return void toast.error(result.error);
       toast.success(product ? t.updated : t.created);
+      // Next keeps visited pages mounted (Activity), so "new product" would reopen with this draft
+      if (!product) form.reset();
       router.push("/admin/products");
     });
 
@@ -223,7 +225,7 @@ export function ProductForm({ product, plugins }: { product: Product | null; plu
           <div className="flex gap-6">
             <Toggle label={t.publishedToggle} control={control} name="published" />
             <Toggle label={t.featuredToggle} control={control} name="featured" />
-            <Toggle label={t.licenseToggle} control={control} name="requiresLicense" />
+            {v.type !== "addon" && <Toggle label={t.licenseToggle} control={control} name="requiresLicense" />}
           </div>
         </Section>
 

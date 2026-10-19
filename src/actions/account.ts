@@ -5,10 +5,11 @@ import { revalidatePath } from "next/cache";
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { products, users } from "@/db/schema";
 import { getActionUser } from "@/lib/auth-guard";
 import { changePasswordSchema, profileSchema } from "@/lib/validations/auth";
-import { regenerateLicenseKey } from "@/lib/licenses";
+import { issueLicenses, regenerateLicenseKey } from "@/lib/licenses";
+import { getOwnedProductIds } from "@/lib/data/account";
 import { site } from "@/lang/site";
 
 const t = site.settings.results;
@@ -47,6 +48,22 @@ export async function changePasswordAction(input: unknown): Promise<AccountResul
   const passwordHash = await bcrypt.hash(parsed.data.newPassword, 12);
   await db.update(users).set({ passwordHash }).where(eq(users.id, user.id));
   return { ok: true, message: t.passwordUpdated };
+}
+
+/** For owned plugins that have no key yet (e.g. bought before licensing was turned on). */
+export async function createMyLicenseAction(productId: unknown): Promise<AccountResult> {
+  const user = await getActionUser();
+  if (!user) return { ok: false, error: site.common.notSignedIn };
+  const parsed = z.uuid().safeParse(productId);
+  if (!parsed.success) return { ok: false, error: site.common.invalidData };
+
+  const product = await db.query.products.findFirst({ where: eq(products.id, parsed.data) });
+  if (!product || !product.requiresLicense || product.type === "addon") return { ok: false, error: site.licenses.notNeeded };
+  if (!(await getOwnedProductIds(user.id)).has(product.id)) return { ok: false, error: site.licenses.notOwned };
+
+  await issueLicenses(db, user.id, [product]);
+  revalidatePath("/dashboard", "layout");
+  return { ok: true, message: site.licenses.created };
 }
 
 /** The owner can swap a leaked key for a new one; the old key stops verifying. */

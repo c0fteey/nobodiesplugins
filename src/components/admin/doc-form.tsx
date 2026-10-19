@@ -28,7 +28,7 @@ export function DocForm({ doc, plugins }: { doc: DocPage | null; plugins: { id: 
   const router = useRouter();
   const [saving, startSave] = useTransition();
   const [deleting, startDelete] = useTransition();
-  const { register, handleSubmit, setValue, control, formState: { errors } } = useForm<FormIn, unknown, FormOut>({
+  const { register, handleSubmit, setValue, control, reset, formState: { errors } } = useForm<FormIn, unknown, FormOut>({
     resolver: zodResolver(docSchema),
     defaultValues: {
       id: doc?.id,
@@ -48,6 +48,8 @@ export function DocForm({ doc, plugins }: { doc: DocPage | null; plugins: { id: 
       const result = await saveDocAction(values);
       if (!result.ok) return void toast.error(result.error);
       toast.success(t.saved);
+      // Next keeps visited pages mounted (Activity), so "new page" would reopen with this draft
+      if (!doc) reset();
       router.push("/admin/docs");
     });
 

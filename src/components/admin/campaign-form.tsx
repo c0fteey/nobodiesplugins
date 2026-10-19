@@ -42,7 +42,7 @@ export function CampaignForm({ campaign, products }: { campaign: Campaign | null
   const [saving, startSave] = useTransition();
   const [deleting, startDelete] = useTransition();
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<FormIn, unknown, FormOut>({
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormIn, unknown, FormOut>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
       id: campaign?.id,
@@ -69,6 +69,8 @@ export function CampaignForm({ campaign, products }: { campaign: Campaign | null
           const result = await saveCampaignAction(values);
           if (!result.ok) return void toast.error(result.error);
           toast.success(campaign ? t.updated : t.created);
+          // Next keeps visited pages mounted (Activity), so "new campaign" would reopen with this draft
+          if (!campaign) reset();
           router.push("/admin/campaigns");
         }),
       )}

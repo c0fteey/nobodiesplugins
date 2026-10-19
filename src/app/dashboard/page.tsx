@@ -44,6 +44,7 @@ async function DashboardContent() {
     : [];
 
   const activeLicenses = licenses.filter((l) => l.license.status === "active").length;
+  const licensedIds = new Set(licenses.map((l) => l.license.productId));
 
   return (
     <div className="space-y-6">
@@ -90,6 +91,7 @@ async function DashboardContent() {
             addons={addonsOf(plugin.id)}
             ownedIds={[...owned].filter((id) => id === plugin.id || addonsOf(plugin.id).some((a) => a.id === id))}
             seasonLabel={settings.seasonLabel}
+            hasLicense={licensedIds.has(plugin.id)}
           />
         ))}
       </div>

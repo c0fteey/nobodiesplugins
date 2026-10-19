@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { licenses, orderItems, orders, products, type Product } from "@/db/schema";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-type LicensedProduct = Pick<Product, "id" | "slug" | "requiresLicense">;
+type LicensedProduct = Pick<Product, "id" | "slug" | "requiresLicense"> & { type?: Product["type"] };
 
 // No 0/O/1/I so keys can be read out and typed without mistakes
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -24,7 +24,8 @@ export function generateLicenseKey(slug: string) {
 
 /** Gives the user a license for every product in the list that needs one (no-op for ones they already have). */
 export async function issueLicenses(tx: Tx | typeof db, userId: string, items: LicensedProduct[]) {
-  const licensed = items.filter((p) => p.requiresLicense);
+  // Add-ons ride on their plugin's license
+  const licensed = items.filter((p) => p.requiresLicense && p.type !== "addon");
   if (!licensed.length) return;
   await tx
     .insert(licenses)

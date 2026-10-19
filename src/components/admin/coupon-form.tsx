@@ -57,7 +57,7 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
   const [deleting, startDelete] = useTransition();
   const [filter, setFilter] = useState("");
 
-  const { register, handleSubmit, setValue, control, formState: { errors } } = useForm<FormIn, unknown, FormOut>({
+  const { register, handleSubmit, setValue, control, reset, formState: { errors } } = useForm<FormIn, unknown, FormOut>({
     resolver: zodResolver(couponSchema),
     defaultValues: {
       id: coupon?.id,
@@ -90,6 +90,11 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
           const result = await saveCouponAction(values);
           if (!result.ok) return void toast.error(result.error);
           toast.success(coupon ? t.updated : t.created);
+          // Next keeps visited pages mounted (Activity), so "new coupon" would reopen with this draft
+          if (!coupon) {
+            reset();
+            setFilter("");
+          }
           router.push("/admin/coupons");
         }),
       )}

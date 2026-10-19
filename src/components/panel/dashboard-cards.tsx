@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatPrice, formatPriceCompact } from "@/lib/format";
+import { CreateLicenseButton } from "./create-license-button";
 import { site } from "@/lang/site";
 
 const t = site.dashboard;
@@ -92,15 +93,19 @@ export function PluginPanelCard({
   addons,
   ownedIds,
   seasonLabel,
+  hasLicense,
 }: {
   plugin: Product;
   addons: Product[];
   ownedIds: string[];
   seasonLabel: string;
+  hasLicense: boolean;
 }) {
   const { add } = useCart();
   const owned = new Set(ownedIds);
   const ownsPlugin = owned.has(plugin.id);
+  // Owned but no key yet: the key comes first, then the download
+  const needsKey = ownsPlugin && plugin.requiresLicense && !hasLicense;
   const tone = TONE[plugin.sortOrder % TONE.length];
 
   return (
@@ -140,7 +145,12 @@ export function PluginPanelCard({
             </p>
           )}
           <div className="flex gap-3">
-            {ownsPlugin ? (
+            {needsKey ? (
+              <CreateLicenseButton
+                productId={plugin.id}
+                className="h-11 flex-1 rounded-md bg-[#a68cff] text-[#120d2b] hover:bg-[#a68cff]/85"
+              />
+            ) : ownsPlugin ? (
               <a
                 href={`/api/download/${plugin.id}`}
                 className="flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-[#a68cff] font-semibold text-[#120d2b] transition hover:bg-[#a68cff]/85"

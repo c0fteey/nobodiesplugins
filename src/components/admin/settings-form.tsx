@@ -2,11 +2,12 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useFieldArray, useForm, useWatch } from "react-hook-form";
+import { useFieldArray, useForm, useWatch, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowDownIcon, ArrowUpIcon, EyeIcon, EyeOffIcon, Loader2Icon, PlusIcon, Trash2Icon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, EyeIcon, EyeOffIcon, Loader2Icon, PlusIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
+import { DiscordIcon, InstagramIcon, TwitterIcon, YoutubeIcon } from "@/components/brand/icons";
 import { toast } from "sonner";
 import type { SiteSettings } from "@/db/schema";
 import { saveSettingsAction } from "@/actions/admin";
@@ -117,21 +118,51 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
           <Field label={t.seasonLabel} hint={t.seasonLabelHint} error={errors.seasonLabel?.message}>
             <input {...register("seasonLabel")} className={inputCls} />
           </Field>
-          <Field label={t.discordUrl} error={errors.discordUrl?.message}>
-            <input {...register("discordUrl")} className={inputCls} />
-          </Field>
           <Field label={t.supportEmail} error={errors.supportEmail?.message}>
             <input {...register("supportEmail")} className={inputCls} />
           </Field>
-          <Field label={t.youtubeUrl} hint={t.socialHint} error={errors.socials?.youtube?.message}>
-            <input {...register("socials.youtube")} placeholder="https://youtube.com/@…" className={inputCls} />
-          </Field>
-          <Field label={t.twitterUrl} hint={t.socialHint} error={errors.socials?.twitter?.message}>
-            <input {...register("socials.twitter")} placeholder="https://x.com/…" className={inputCls} />
-          </Field>
-          <Field label={t.instagramUrl} hint={t.socialHint} error={errors.socials?.instagram?.message}>
-            <input {...register("socials.instagram")} placeholder="https://instagram.com/…" className={inputCls} />
-          </Field>
+        </div>
+      </Section>
+
+      <Section title={t.socials}>
+        <p className="-mt-3 text-xs text-white/50">{t.socialsHint}</p>
+        <div className="grid gap-3">
+          <SocialRow
+            control={control}
+            icon={<DiscordIcon className="size-5" />}
+            label={t.discordUrl}
+            urlName="discordUrl"
+            toggleName="footer.showDiscord"
+            error={errors.discordUrl?.message}
+            input={<input {...register("discordUrl")} placeholder="https://discord.gg/…" className={inputCls} />}
+          />
+          <SocialRow
+            control={control}
+            icon={<TwitterIcon className="size-5" />}
+            label={t.twitterUrl}
+            urlName="socials.twitter"
+            toggleName="footer.showTwitter"
+            error={errors.socials?.twitter?.message}
+            input={<input {...register("socials.twitter")} placeholder="https://x.com/…" className={inputCls} />}
+          />
+          <SocialRow
+            control={control}
+            icon={<InstagramIcon className="size-5" />}
+            label={t.instagramUrl}
+            urlName="socials.instagram"
+            toggleName="footer.showInstagram"
+            error={errors.socials?.instagram?.message}
+            input={<input {...register("socials.instagram")} placeholder="https://instagram.com/…" className={inputCls} />}
+          />
+          <SocialRow
+            control={control}
+            icon={<YoutubeIcon className="size-5" />}
+            label={t.youtubeUrl}
+            urlName="socials.youtube"
+            error={errors.socials?.youtube?.message}
+            note={t.youtubeNote}
+            input={<input {...register("socials.youtube")} placeholder="https://youtube.com/@…" className={inputCls} />}
+          />
         </div>
       </Section>
 
@@ -202,11 +233,6 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
           <Field label={t.tagline} hint={t.taglineHint} error={errors.footer?.tagline?.message}>
             <input {...register("footer.tagline")} className={inputCls} placeholder={t.taglinePlaceholder} />
           </Field>
-          <div className="flex flex-wrap gap-6">
-            <Toggle label={t.showDiscord} control={control} name="footer.showDiscord" />
-            <Toggle label={t.showTwitter} control={control} name="footer.showTwitter" />
-            <Toggle label={t.showInstagram} control={control} name="footer.showInstagram" />
-          </div>
         </div>
       </Section>
 
@@ -214,6 +240,49 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
         {pending && <Loader2Icon className="size-4 animate-spin" />} {t.save}
       </button>
     </form>
+  );
+}
+
+type SocialUrl = "discordUrl" | "socials.twitter" | "socials.instagram" | "socials.youtube";
+type SocialToggle = "footer.showDiscord" | "footer.showTwitter" | "footer.showInstagram";
+
+/** One network: its link, whether the footer shows it, and a warning when it's on but has no link. */
+function SocialRow({
+  control,
+  icon,
+  label,
+  urlName,
+  toggleName,
+  error,
+  note,
+  input,
+}: {
+  control: Control<FormIn>;
+  icon: React.ReactNode;
+  label: string;
+  urlName: SocialUrl;
+  toggleName?: SocialToggle;
+  error?: string;
+  note?: string;
+  input: React.ReactNode;
+}) {
+  const url = (useWatch({ control, name: urlName }) as string | undefined) ?? "";
+  const shown = useWatch({ control, name: toggleName ?? "footer.showDiscord" }) as boolean | undefined;
+  const missing = !!toggleName && !!shown && !url.trim();
+
+  return (
+    <div className="grid items-center gap-3 rounded-lg border border-white/10 bg-[#121212] p-3 md:grid-cols-[auto_1fr_auto]">
+      <span className={`grid size-10 place-items-center rounded-md ${url.trim() ? "bg-brand/20 text-brand-soft" : "bg-white/5 text-white/35"}`}>{icon}</span>
+      <Field label={label} error={error} hint={missing ? undefined : note}>
+        {input}
+        {missing && (
+          <span className="mt-1 inline-flex items-center gap-1.5 text-xs text-amber-400">
+            <TriangleAlertIcon className="size-3.5" /> {t.socialMissing}
+          </span>
+        )}
+      </Field>
+      {toggleName ? <Toggle label={t.showInFooter} control={control} name={toggleName} /> : <span />}
+    </div>
   );
 }
 

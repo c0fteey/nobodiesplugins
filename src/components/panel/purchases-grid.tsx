@@ -9,6 +9,7 @@ import { ProductArt } from "@/components/store/product-art";
 import { ChoiceSelect } from "@/components/ui/choice-select";
 import { PRODUCT_TYPE_LABEL, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { CreateLicenseButton } from "./create-license-button";
 import { site } from "@/lang/site";
 
 const t = site.purchases;
@@ -29,7 +30,8 @@ const SORT_OPTIONS = [
   { value: "name", label: t.sorts.name },
 ] as const;
 
-export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
+export function PurchasesGrid({ purchases, licensedIds }: { purchases: Purchase[]; licensedIds: string[] }) {
+  const licensed = new Set(licensedIds);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<"recommended" | "newest" | "name">("recommended");
@@ -133,12 +135,19 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
                     {t.meta(product.version, timeAgo(new Date(acquiredAt)))}
                   </p>
                   <div className="mt-4 flex gap-2">
-                    <a
-                      href={`/api/download/${product.id}`}
-                      className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-[#c4b5fd] text-sm font-bold text-[#1e1442] transition hover:bg-[#c4b5fd]/85"
-                    >
-                      <CloudDownloadIcon className="size-4" /> {t.download}
-                    </a>
+                    {product.requiresLicense && product.type !== "addon" && !licensed.has(product.id) ? (
+                      <CreateLicenseButton
+                        productId={product.id}
+                        className="h-10 flex-1 rounded-md bg-[#c4b5fd] text-sm text-[#1e1442] hover:bg-[#c4b5fd]/85"
+                      />
+                    ) : (
+                      <a
+                        href={`/api/download/${product.id}`}
+                        className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-[#c4b5fd] text-sm font-bold text-[#1e1442] transition hover:bg-[#c4b5fd]/85"
+                      >
+                        <CloudDownloadIcon className="size-4" /> {t.download}
+                      </a>
+                    )}
                     <Link
                       href={`/products/${product.slug}`}
                       aria-label={t.details}

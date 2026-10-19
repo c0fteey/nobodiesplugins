@@ -83,7 +83,8 @@ export async function saveProductAction(input: unknown): Promise<AdminResult> {
     badge: p.badge === "none" ? null : p.badge,
     imageUrl: p.imageUrl,
     downloadUrl: p.downloadUrl,
-    requiresLicense: p.requiresLicense,
+    // Add-ons run on their plugin's license, so they never get keys of their own
+    requiresLicense: p.type !== "addon" && p.requiresLicense,
     accentFrom: p.accentFrom,
     accentTo: p.accentTo,
     artTitle: p.artTitle || null,
@@ -108,7 +109,7 @@ export async function saveProductAction(input: unknown): Promise<AdminResult> {
   }
 
   // Turning licensing on for a product that already has owners gives them their keys
-  if (p.requiresLicense) await backfillLicenses({ id: id!, slug: p.slug, requiresLicense: true });
+  if (values.requiresLicense) await backfillLicenses({ id: id!, slug: p.slug, requiresLicense: true });
 
   updateTag("products");
   revalidatePath("/admin", "layout");
