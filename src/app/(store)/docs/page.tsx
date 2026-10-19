@@ -15,8 +15,11 @@ import { getDocPages, getFaqs, getProducts, getSettings } from "@/lib/data/store
 import { DocSearch } from "@/components/store/doc-search";
 import { FaqList } from "@/components/store/faq-list";
 import { ProductArt } from "@/components/store/product-art";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "Documentation" };
+const t = site.docs;
+
+export const metadata: Metadata = { title: site.meta.pages.docs };
 
 const ICONS = [BoxIcon, StoreIcon, SwordsIcon, PuzzleIcon];
 
@@ -30,13 +33,12 @@ export default async function DocsPage() {
     <div className="bg-[radial-gradient(ellipse_at_top,#2a1a6b_0%,transparent_55%)]">
       <section className="container-page pt-14 pb-16 text-center">
         <h1 className="text-5xl leading-[1.05] font-bold tracking-[-0.03em] sm:text-6xl">
-          NOBODIES
+          {t.titleLine1}
           <br />
-          <span className="text-brand-soft">Documentation</span>
+          <span className="text-brand-soft">{t.titleLine2}</span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-sm text-white/70">
-          Official technical documentation for every NOBODIES plugin, including setup guides, configuration notes, and
-          command references.
+          {t.lead}
         </p>
         <DocSearch
           docs={docs.map((d) => ({
@@ -68,10 +70,10 @@ export default async function DocsPage() {
                   href={`/docs/${pages[0].slug}`}
                   className="relative mt-6 inline-flex h-9 items-center gap-2 rounded-sm bg-brand px-4 text-sm font-semibold text-white transition hover:bg-brand/85"
                 >
-                  View Docs <ArrowRightIcon className="size-4" />
+                  {t.viewDocs} <ArrowRightIcon className="size-4" />
                 </Link>
               ) : (
-                <p className="relative mt-6 text-xs text-white/50">Docs coming soon</p>
+                <p className="relative mt-6 text-xs text-white/50">{t.comingSoon}</p>
               )}
             </article>
           );
@@ -79,7 +81,7 @@ export default async function DocsPage() {
       </section>
 
       <section className="container-page mt-16">
-        <p className="text-xs font-bold tracking-[0.2em] text-brand-soft">LATEST BUILDS</p>
+        <p className="text-xs font-bold tracking-[0.2em] text-brand-soft">{t.latestBuilds}</p>
         <div className="mt-4 space-y-3">
           {plugins.map((p) => (
             <Link
@@ -87,28 +89,28 @@ export default async function DocsPage() {
               href={`/products/${p.slug}`}
               className="block rounded-md border-l-2 border-brand bg-[#1c1c20] px-4 py-3 transition hover:bg-[#232329]"
             >
-              <p className="font-mono text-[11px] text-white/50">Build v{p.version}-stable</p>
+              <p className="font-mono text-[11px] text-white/50">{t.buildLabel(p.version)}</p>
               <p className="text-sm font-semibold">{p.name}</p>
-              <p className="text-xs text-white/60">{p.changelog ?? "Stability improvements and fixes"}</p>
+              <p className="text-xs text-white/60">{p.changelog ?? t.defaultChangelog}</p>
             </Link>
           ))}
         </div>
       </section>
 
       <section className="container-page mt-16">
-        <p className="text-xs font-bold tracking-[0.2em] text-brand-soft">RESOURCES</p>
+        <p className="text-xs font-bold tracking-[0.2em] text-brand-soft">{t.resources}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {general.map((d) => (
             <ResourceTile key={d.id} href={`/docs/${d.slug}`} icon={<RocketIcon className="size-5" />} label={d.title} />
           ))}
-          <ResourceTile href="/help" icon={<CircleHelpIcon className="size-5" />} label="Help Center" />
-          <ResourceTile href={settings.discordUrl} external icon={<MessagesSquareIcon className="size-5" />} label="Discord Community" />
+          <ResourceTile href="/help" icon={<CircleHelpIcon className="size-5" />} label={t.helpCenter} />
+          <ResourceTile href={settings.discordUrl} external icon={<MessagesSquareIcon className="size-5" />} label={t.discordCommunity} />
         </div>
       </section>
 
       {faqs.length > 0 && (
         <section className="container-page mt-24">
-          <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
+          <h2 className="text-3xl font-bold">{t.faqTitle}</h2>
           <div className="mt-8">
             <FaqList faqs={faqs} />
           </div>
@@ -118,9 +120,9 @@ export default async function DocsPage() {
       <section className="container-page mt-16 pb-24">
         <div className="rounded-xl border border-white/5 bg-[#1b1a2b] p-8">
           <HeadsetIcon className="size-8 text-brand-soft" strokeWidth={1.6} />
-          <h2 className="mt-5 text-3xl font-bold">Still need assistance?</h2>
+          <h2 className="mt-5 text-3xl font-bold">{t.needHelpTitle}</h2>
           <p className="mt-3 text-sm text-white/70">
-            Our support team is here to help you resolve technical hurdles or architectural questions.
+            {t.needHelpText}
           </p>
           <div className="mt-6 grid gap-3">
             <a
@@ -129,13 +131,13 @@ export default async function DocsPage() {
               rel="noreferrer"
               className="flex h-11 items-center justify-center rounded-sm bg-brand text-sm font-semibold text-white transition hover:bg-brand/85"
             >
-              Join Discord
+              {site.common.joinDiscord}
             </a>
             <a
               href={`mailto:${settings.supportEmail}`}
               className="flex h-11 items-center justify-center rounded-sm bg-white/5 text-sm font-semibold transition hover:bg-white/10"
             >
-              Contact Email
+              {t.contactEmail}
             </a>
           </div>
         </div>

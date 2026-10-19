@@ -13,6 +13,9 @@ import { ContentBlocksView } from "@/components/store/product-page/content-block
 import { OfferCards } from "@/components/store/product-page/offer-card";
 import { SectionTabs } from "@/components/store/product-page/section-tabs";
 import { Reveal } from "@/components/store/product-page/reveal";
+import { site } from "@/lang/site";
+
+const t = site.product;
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -41,16 +44,16 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
   const hasFaq = blocks.some((b) => b.type === "faq");
 
   const tabs = [
-    { id: "overview", label: "Overview" },
-    ...(addons.length ? [{ id: "addons", label: "Add-ons" }] : []),
-    ...(productDocs.length ? [{ id: "docs", label: "Wiki" }] : []),
-    ...(hasFaq ? [{ id: "faq", label: "FAQ" }] : []),
+    { id: "overview", label: t.tabs.overview },
+    ...(addons.length ? [{ id: "addons", label: t.tabs.addons }] : []),
+    ...(productDocs.length ? [{ id: "docs", label: t.tabs.docs }] : []),
+    ...(hasFaq ? [{ id: "faq", label: t.tabs.faq }] : []),
   ];
 
   return (
     <div className="container-page py-8">
       <nav className="flex items-center gap-1 text-xs text-white/50">
-        <Link href="/products" className="hover:text-white">Store</Link>
+        <Link href="/products" className="hover:text-white">{t.breadcrumbStore}</Link>
         <ChevronRightIcon className="size-3" />
         {parent && (
           <>
@@ -76,7 +79,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
                 {product.tagline && ` · ${product.tagline}`}
                 {parent && (
                   <>
-                    {" · for "}
+                    {t.for}
                     <Link href={`/products/${parent.slug}`} className="text-brand-soft hover:underline">{parent.name}</Link>
                   </>
                 )}
@@ -120,7 +123,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
               product.description && (
                 <Reveal>
                   <section className="mx-auto max-w-2xl text-center">
-                    <h2 className="text-3xl font-bold">About {product.name}</h2>
+                    <h2 className="text-3xl font-bold">{t.aboutTitle(product.name)}</h2>
                     <p className="mt-4 leading-relaxed whitespace-pre-line text-white/75">{product.description}</p>
                   </section>
                 </Reveal>
@@ -130,7 +133,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
 
           {addons.length > 0 && (
             <section id="addons" className="scroll-mt-20 pt-16">
-              <SectionHeading title={`Add-ons for ${product.name}`} description="Expand it with extra modes, menus and animations." href={`/addons?category=${product.slug}`} />
+              <SectionHeading title={t.addonsTitle(product.name)} description={t.addonsDescription} href={`/addons?category=${product.slug}`} />
               <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">
                 {addons.slice(0, 6).map((p) => (
                   <ProductCard key={p.id} product={p} />
@@ -141,7 +144,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
 
           {productDocs.length > 0 && (
             <section id="docs" className="scroll-mt-20 pt-16">
-              <SectionHeading title="Wiki" description="Setup guides and references." />
+              <SectionHeading title={t.wikiTitle} description={t.wikiDescription} />
               <div className="grid gap-3 sm:grid-cols-2">
                 {productDocs.map((d) => (
                   <Link key={d.id} href={`/docs/${d.slug}`} className="group flex items-center gap-3 rounded-lg border border-white/10 bg-[#1a1a1d] p-4 transition hover:border-brand/50">
@@ -159,7 +162,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[slug
 
           {related.length > 0 && (
             <section className="pt-16 pb-8">
-              <SectionHeading title="You might also like" description="Complete your server with more NOBODIES products." />
+              <SectionHeading title={t.relatedTitle} description={t.relatedDescription} />
               <div className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">
                 {related.map((p) => (
                   <ProductCard key={p.id} product={p} />

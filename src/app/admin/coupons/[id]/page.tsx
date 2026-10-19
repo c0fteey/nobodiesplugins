@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { getAllProducts, getCouponById } from "@/lib/data/admin";
 import { AdminHeader } from "@/components/admin/ui";
 import { CouponForm } from "@/components/admin/coupon-form";
+import { admin } from "@/lang/admin";
 
-export const metadata: Metadata = { title: "Edit coupon · Admin" };
+export const metadata: Metadata = { title: admin.meta.editCoupon + admin.meta.suffix };
 
 export default async function EditCouponPage({ params }: PageProps<"/admin/coupons/[id]">) {
   const { id } = await params;
@@ -14,7 +15,7 @@ export default async function EditCouponPage({ params }: PageProps<"/admin/coupo
 
   return (
     <>
-      <AdminHeader title={isNew ? "New coupon" : `Edit ${row!.coupon.code}`} />
+      <AdminHeader title={isNew ? admin.coupons.newTitle : admin.common.editTitle(row!.coupon.code)} />
       <CouponForm
         coupon={row?.coupon ?? null}
         ownerEmail={row?.ownerEmail ?? ""}

@@ -8,6 +8,9 @@ import { useNow } from "@/hooks/use-now";
 import { formatPrice } from "@/lib/format";
 import { ProductArt } from "../product-art";
 import { useCart } from "../cart-provider";
+import { site } from "@/lang/site";
+
+const t = site.product.buyBox;
 
 export function BuyBox({ product, highlights }: { product: Product; highlights: Highlight[] }) {
   const { add, has, campaigns, catalog } = useCart();
@@ -37,7 +40,7 @@ export function BuyBox({ product, highlights }: { product: Product; highlights: 
       <div className="rounded-2xl border border-white/10 bg-[#19181f] p-6">
         <div className="flex items-end gap-3">
           <p className="text-4xl font-extrabold tracking-tight">
-            {product.priceCents ? formatPrice(product.priceCents) : "Free"}
+            {product.priceCents ? formatPrice(product.priceCents) : site.common.free}
           </p>
           {product.compareAtCents && (
             <p className="mb-1 text-sm text-white/50 line-through">{formatPrice(product.compareAtCents)}</p>
@@ -46,7 +49,7 @@ export function BuyBox({ product, highlights }: { product: Product; highlights: 
             <span className="mb-1.5 rounded-full bg-success/15 px-2 py-0.5 text-[11px] font-bold text-success">-{savePct}%</span>
           )}
         </div>
-        <p className="mt-2 text-xs text-white/50">One-time purchase · lifetime updates · license included</p>
+        <p className="mt-2 text-xs text-white/50">{t.oneTime}</p>
 
         <motion.button
           type="button"
@@ -54,7 +57,7 @@ export function BuyBox({ product, highlights }: { product: Product; highlights: 
           onClick={() => add(product.id)}
           className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand font-semibold text-white shadow-lg shadow-brand/25 transition hover:bg-brand/85"
         >
-          <ZapIcon className="size-4" /> Buy now
+          <ZapIcon className="size-4" /> {t.buyNow}
         </motion.button>
         <button
           type="button"
@@ -62,18 +65,18 @@ export function BuyBox({ product, highlights }: { product: Product; highlights: 
           className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 text-sm font-semibold transition hover:bg-white/5"
         >
           {inCart ? <CheckIcon className="size-4 text-success" /> : <ShoppingCartIcon className="size-4" />}
-          {inCart ? "In your cart" : "Add to cart"}
+          {inCart ? t.inCart : t.addToCart}
         </button>
       </div>
 
       {(highlights.length > 0 || product.mcVersions.length > 0) && (
         <div className="rounded-2xl border border-white/10 bg-[#19181f] p-6">
-          <p className="text-sm font-bold">Key Stats</p>
+          <p className="text-sm font-bold">{t.keyStats}</p>
           <dl className="mt-4 space-y-3 text-sm">
             {product.mcVersions.length > 0 && (
-              <Stat label="Minecraft" value={`${product.mcVersions[0]} – ${product.mcVersions.at(-1)}`} />
+              <Stat label={t.minecraft} value={`${product.mcVersions[0]} – ${product.mcVersions.at(-1)}`} />
             )}
-            <Stat label="Version" value={`v${product.version}`} />
+            <Stat label={t.version} value={`v${product.version}`} />
             {highlights.map((h, i) => (
               <Stat key={i} label={h.label} value={h.value} />
             ))}
@@ -82,7 +85,7 @@ export function BuyBox({ product, highlights }: { product: Product; highlights: 
       )}
 
       <div className="rounded-2xl border border-white/10 bg-[#19181f] p-6">
-        <p className="text-sm font-bold">Products included</p>
+        <p className="text-sm font-bold">{t.included}</p>
         <ul className="mt-4 space-y-3">
           {[product, ...gifts].map((p, i) => (
             <li key={p.id} className="flex items-center gap-3">
@@ -90,7 +93,7 @@ export function BuyBox({ product, highlights }: { product: Product; highlights: 
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold">{p.name}</span>
                 <span className="text-xs text-white/50">
-                  {i === 0 ? formatPrice(p.priceCents) : <span className="inline-flex items-center gap-1 text-success"><GiftIcon className="size-3" /> Free gift · worth {formatPrice(p.priceCents)}</span>}
+                  {i === 0 ? formatPrice(p.priceCents) : <span className="inline-flex items-center gap-1 text-success"><GiftIcon className="size-3" /> {t.freeGift(formatPrice(p.priceCents))}</span>}
                 </span>
               </span>
             </li>

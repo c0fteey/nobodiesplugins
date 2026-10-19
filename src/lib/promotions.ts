@@ -2,6 +2,10 @@ import "server-only";
 import { and, count, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { campaigns, couponRedemptions, coupons, products, type Campaign, type Coupon, type Product } from "@/db/schema";
+import { formatPriceCompact } from "@/lib/format";
+import { site } from "@/lang/site";
+
+const t = site.coupons;
 
 export type CartGift = { product: Product; campaign: Campaign };
 
@@ -26,36 +30,36 @@ export function isLive(window: { startsAt: Date | null; active: boolean } & ({ e
 }
 
 function couponLabel(c: Coupon) {
-  const value = c.type === "percent" ? `${c.amount}% off` : `€${(c.amount / 100).toFixed(2).replace(".", ",")} off`;
+  const value = t.off(c.type === "percent" ? `%${c.amount}` : formatPriceCompact(c.amount));
   return c.creatorName ? `${value} · ${c.creatorName}` : value;
 }
 
 /** Validates a coupon against the cart. userId null = guest preview (account checks skipped where possible). */
 async function evaluateCoupon(code: string, userId: string | null, items: Product[]) {
   const coupon = await db.query.coupons.findFirst({ where: eq(coupons.code, normalizeCode(code)) });
-  if (!coupon || !isLive(coupon)) return { error: "This coupon is invalid or has expired" } as const;
-  if (coupon.maxUses != null && coupon.usesCount >= coupon.maxUses) return { error: "This coupon has been used up" } as const;
+  if (!coupon || !isLive(coupon)) return { error: t.invalid } as const;
+  if (coupon.maxUses != null && coupon.usesCount >= coupon.maxUses) return { error: t.usedUp } as const;
 
   if (coupon.userId) {
-    if (!userId) return { error: "Log in to use this coupon" } as const;
-    if (coupon.userId !== userId) return { error: "This coupon belongs to another account" } as const;
+    if (!userId) return { error: t.loginRequired } as const;
+    if (coupon.userId !== userId) return { error: t.otherAccount } as const;
   }
   if (userId) {
     const [{ used }] = await db
       .select({ used: count() })
       .from(couponRedemptions)
       .where(and(eq(couponRedemptions.couponId, coupon.id), eq(couponRedemptions.userId, userId)));
-    if (used >= coupon.perUserLimit) return { error: "You have already used this coupon" } as const;
+    if (used >= coupon.perUserLimit) return { error: t.alreadyUsed } as const;
   }
 
   const total = items.reduce((s, p) => s + p.priceCents, 0);
   if (total < coupon.minSubtotalCents) {
-    return { error: `Spend at least €${(coupon.minSubtotalCents / 100).toFixed(2).replace(".", ",")} to use this coupon` } as const;
+    return { error: t.minSpend(formatPriceCompact(coupon.minSubtotalCents)) } as const;
   }
 
   const eligible = coupon.productIds.length ? items.filter((p) => coupon.productIds.includes(p.id)) : items;
   const eligibleSum = eligible.reduce((s, p) => s + p.priceCents, 0);
-  if (eligibleSum === 0) return { error: "This coupon doesn't apply to the items in your cart" } as const;
+  if (eligibleSum === 0) return { error: t.notApplicable } as const;
 
   const discount =
     coupon.type === "percent" ? Math.round((eligibleSum * Math.min(coupon.amount, 100)) / 100) : Math.min(coupon.amount, eligibleSum);

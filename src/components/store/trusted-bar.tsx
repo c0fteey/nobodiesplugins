@@ -1,4 +1,5 @@
 import { getPartners } from "@/lib/data/store";
+import { site } from "@/lang/site";
 
 export async function TrustedBar() {
   const partners = await getPartners();
@@ -8,8 +9,8 @@ export async function TrustedBar() {
     <div className="container-page">
       <div className="flex flex-col gap-6 rounded-2xl border border-white/[0.06] bg-[#1a1a1c] px-6 py-7 md:flex-row md:items-center">
         <div className="shrink-0">
-          <p className="text-[15px] font-bold tracking-[0.12em]">TRUSTED BY THE COMMUNITY</p>
-          <p className="text-sm text-white/70">Servers that run NOBODIES every day</p>
+          <p className="text-[15px] font-bold tracking-[0.12em]">{site.trusted.title}</p>
+          <p className="text-sm text-white/70">{site.trusted.subtitle}</p>
         </div>
         <div className="relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_6%,#000_94%,transparent)]">
           {/* Duplicated list scrolls endlessly */}
@@ -30,7 +31,7 @@ export async function TrustedBar() {
                 <span>
                   <span className="block text-base font-bold text-white/80">{p.name}</span>
                   <span className="block text-[10px] font-semibold tracking-wide text-white/50">
-                    {p.playersAvg} PLAYERS AVG
+                    {site.trusted.playersAvg(p.playersAvg)}
                   </span>
                 </span>
               </div>

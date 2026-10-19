@@ -12,9 +12,12 @@ import {
   faqs,
   partners,
   products,
+  roles,
   settings,
   users,
 } from "@/db/schema";
+import { slugify } from "@/lib/format";
+import { admin } from "@/lang/admin";
 import { assertAdmin } from "@/lib/auth-guard";
 import {
   campaignSchema,
@@ -25,6 +28,8 @@ import {
   productSchema,
   settingsSchema,
 } from "@/lib/validations/store";
+
+const e = admin.errors;
 
 export type AdminResult = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -38,7 +43,7 @@ const list = (value: string) =>
 
 function fail(error: z.ZodError): AdminResult {
   const issue = error.issues[0];
-  return { ok: false, error: issue ? `${issue.path.join(".") || "form"}: ${issue.message}` : "Invalid data" };
+  return { ok: false, error: issue ? `${issue.path.join(".") || e.form}: ${issue.message}` : e.invalidData };
 }
 
 // Every admin mutation: auth check -> zod -> write -> invalidate public caches
@@ -53,7 +58,7 @@ export async function saveProductAction(input: unknown): Promise<AdminResult> {
     where: p.id ? and(eq(products.slug, p.slug), ne(products.id, p.id)) : eq(products.slug, p.slug),
     columns: { id: true },
   });
-  if (clash) return { ok: false, error: "Another product already uses this slug" };
+  if (clash) return { ok: false, error: e.slugTaken };
 
   const values = {
     name: p.name,
@@ -99,13 +104,13 @@ export async function saveProductAction(input: unknown): Promise<AdminResult> {
 export async function deleteProductAction(id: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = idSchema.safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  if (!parsed.success) return { ok: false, error: e.invalidId };
 
   try {
     await db.delete(products).where(eq(products.id, parsed.data));
   } catch {
     // order_item references products with ON DELETE RESTRICT
-    return { ok: false, error: "This product has orders. Unpublish it instead of deleting." };
+    return { ok: false, error: e.productHasOrders };
   }
   updateTag("products");
   revalidatePath("/admin", "layout");
@@ -122,7 +127,7 @@ export async function saveDocAction(input: unknown): Promise<AdminResult> {
     where: id ? and(eq(docPages.slug, doc.slug), ne(docPages.id, id)) : eq(docPages.slug, doc.slug),
     columns: { id: true },
   });
-  if (clash) return { ok: false, error: "Another page already uses this slug" };
+  if (clash) return { ok: false, error: e.docSlugTaken };
 
   const values = { ...doc, productId: doc.productId ?? null, updatedAt: new Date() };
   let savedId = id;
@@ -140,7 +145,7 @@ export async function saveDocAction(input: unknown): Promise<AdminResult> {
 export async function deleteDocAction(id: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = idSchema.safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  if (!parsed.success) return { ok: false, error: e.invalidId };
   await db.delete(docPages).where(eq(docPages.id, parsed.data));
   updateTag("docs");
   revalidatePath("/admin", "layout");
@@ -163,7 +168,7 @@ export async function saveFaqAction(input: unknown): Promise<AdminResult> {
 export async function deleteFaqAction(id: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = idSchema.safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  if (!parsed.success) return { ok: false, error: e.invalidId };
   await db.delete(faqs).where(eq(faqs.id, parsed.data));
   updateTag("faqs");
   revalidatePath("/admin", "layout");
@@ -186,7 +191,7 @@ export async function savePartnerAction(input: unknown): Promise<AdminResult> {
 export async function deletePartnerAction(id: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = idSchema.safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  if (!parsed.success) return { ok: false, error: e.invalidId };
   await db.delete(partners).where(eq(partners.id, parsed.data));
   updateTag("partners");
   revalidatePath("/admin", "layout");
@@ -208,20 +213,67 @@ export async function saveSettingsAction(input: unknown): Promise<AdminResult> {
 }
 
 export async function setUserRoleAction(input: unknown): Promise<AdminResult> {
-  const admin = await assertAdmin();
-  const parsed = z.object({ userId: z.uuid(), role: z.enum(["user", "admin"]) }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Invalid data" };
-  if (parsed.data.userId === admin.id) return { ok: false, error: "You can't change your own role" };
+  const me = await assertAdmin();
+  const parsed = z.object({ userId: z.uuid(), role: z.string().min(1).max(40) }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: e.invalidData };
+  if (parsed.data.userId === me.id) return { ok: false, error: e.ownRole };
+  const role = await db.query.roles.findFirst({ where: eq(roles.key, parsed.data.role), columns: { key: true } });
+  if (!role) return { ok: false, error: e.unknownRole };
 
-  await db.update(users).set({ role: parsed.data.role }).where(eq(users.id, parsed.data.userId));
+  await db.update(users).set({ role: role.key }).where(eq(users.id, parsed.data.userId));
   revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+const roleSchema = z.object({
+  key: z.string().max(40).optional(),
+  name: z.string().trim().min(2).max(40),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, admin.validation.hexColor),
+});
+
+/** Creates a role (key derived from the name) or renames/recolors an existing one. */
+export async function saveRoleAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = roleSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+  const { key, name, color } = parsed.data;
+
+  if (key) {
+    const updated = await db.update(roles).set({ name, color }).where(eq(roles.key, key)).returning({ key: roles.key });
+    if (!updated.length) return { ok: false, error: e.unknownRole };
+  } else {
+    const newKey = slugify(name);
+    if (!newKey) return { ok: false, error: e.invalidData };
+    const exists = await db.query.roles.findFirst({ where: eq(roles.key, newKey), columns: { key: true } });
+    if (exists) return { ok: false, error: e.roleExists };
+    // New roles sit between the built-in "user" (0) and "admin" (100)
+    await db.insert(roles).values({ key: newKey, name, color, sortOrder: 50 });
+  }
+  revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
+  return { ok: true };
+}
+
+/** Deletes a custom role; its members fall back to "user" (ON DELETE SET DEFAULT). */
+export async function deleteRoleAction(key: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = z.string().min(1).max(40).safeParse(key);
+  if (!parsed.success) return { ok: false, error: e.invalidId };
+
+  const role = await db.query.roles.findFirst({ where: eq(roles.key, parsed.data) });
+  if (!role) return { ok: false, error: e.unknownRole };
+  if (role.system) return { ok: false, error: e.systemRole };
+
+  await db.delete(roles).where(eq(roles.key, role.key));
+  revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
   return { ok: true };
 }
 
 export async function setMessageHandledAction(input: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = z.object({ id: z.uuid(), handled: z.boolean() }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: "Invalid data" };
+  if (!parsed.success) return { ok: false, error: e.invalidData };
 
   await db.update(contactMessages).set({ handled: parsed.data.handled }).where(eq(contactMessages.id, parsed.data.id));
   revalidatePath("/admin", "layout");
@@ -237,7 +289,7 @@ export async function saveCouponAction(input: unknown): Promise<AdminResult> {
   let userId: string | null = null;
   if (c.userEmail) {
     const owner = await db.query.users.findFirst({ where: eq(users.email, c.userEmail), columns: { id: true } });
-    if (!owner) return { ok: false, error: `No account with email ${c.userEmail}` };
+    if (!owner) return { ok: false, error: e.noAccount(c.userEmail) };
     userId = owner.id;
   }
 
@@ -245,7 +297,7 @@ export async function saveCouponAction(input: unknown): Promise<AdminResult> {
     where: c.id ? and(eq(coupons.code, c.code), ne(coupons.id, c.id)) : eq(coupons.code, c.code),
     columns: { id: true },
   });
-  if (clash) return { ok: false, error: "Another coupon already uses this code" };
+  if (clash) return { ok: false, error: e.couponTaken };
 
   const values = {
     code: c.code,
@@ -275,7 +327,7 @@ export async function saveCouponAction(input: unknown): Promise<AdminResult> {
 export async function deleteCouponAction(id: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = idSchema.safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  if (!parsed.success) return { ok: false, error: e.invalidId };
   await db.delete(coupons).where(eq(coupons.id, parsed.data));
   revalidatePath("/admin", "layout");
   return { ok: true };
@@ -299,7 +351,7 @@ export async function saveCampaignAction(input: unknown): Promise<AdminResult> {
 export async function deleteCampaignAction(id: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = idSchema.safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  if (!parsed.success) return { ok: false, error: e.invalidId };
   await db.delete(campaigns).where(eq(campaigns.id, parsed.data));
   updateTag("campaigns");
   revalidatePath("/admin", "layout");

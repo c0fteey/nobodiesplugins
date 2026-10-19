@@ -2,21 +2,25 @@ import type { Metadata } from "next";
 import { getRecentOrders } from "@/lib/data/admin";
 import { formatDate, formatPrice } from "@/lib/format";
 import { AdminCard, AdminHeader, td, th } from "@/components/admin/ui";
+import { admin } from "@/lang/admin";
 
-export const metadata: Metadata = { title: "Orders · Admin" };
+const t = admin.orders;
+const col = admin.common.columns;
+
+export const metadata: Metadata = { title: admin.meta.orders + admin.meta.suffix };
 
 export default async function AdminOrdersPage() {
   const orders = await getRecentOrders(200);
 
   return (
     <>
-      <AdminHeader title="Orders" description="Latest 200 orders." />
+      <AdminHeader title={t.title} description={t.description} />
       <AdminCard className="overflow-x-auto">
         <table className="w-full min-w-[760px]">
           <thead className="border-b border-white/5">
             <tr>
-              <th className={th}>DATE</th><th className={th}>ORDER</th><th className={th}>CUSTOMER</th>
-              <th className={th}>ITEMS</th><th className={th}>DISCOUNT</th><th className={th}>TOTAL</th><th className={th}>STATUS</th>
+              <th className={th}>{col.date}</th><th className={th}>{t.columns.order}</th><th className={th}>{col.customer}</th>
+              <th className={th}>{col.items}</th><th className={th}>{t.columns.discount}</th><th className={th}>{col.total}</th><th className={th}>{col.status}</th>
             </tr>
           </thead>
           <tbody>
@@ -29,12 +33,12 @@ export default async function AdminOrdersPage() {
                 <td className={`${td} text-success`}>{order.discountCents ? `−${formatPrice(order.discountCents)}` : "—"}</td>
                 <td className={`${td} font-semibold`}>{formatPrice(order.totalCents)}</td>
                 <td className={td}>
-                  <span className="rounded-sm bg-success/15 px-1.5 py-0.5 text-[10px] font-bold text-success uppercase">{order.status}</span>
+                  <span className="rounded-sm bg-success/15 px-1.5 py-0.5 text-[10px] font-bold text-success uppercase">{admin.orderStatuses[order.status]}</span>
                 </td>
               </tr>
             ))}
             {orders.length === 0 && (
-              <tr><td className={`${td} text-white/50`} colSpan={7}>No orders yet.</td></tr>
+              <tr><td className={`${td} text-white/50`} colSpan={7}>{t.empty}</td></tr>
             )}
           </tbody>
         </table>

@@ -19,6 +19,10 @@ import {
 import { faqSchema, partnerSchema } from "@/lib/validations/store";
 import { ImageUploadButton } from "@/components/media/image-upload";
 import { Field, inputCls, textareaCls, Toggle } from "./form-bits";
+import { admin } from "@/lang/admin";
+
+const tf = admin.faqs;
+const tp = admin.partners;
 
 function useAdminMutation() {
   const router = useRouter();
@@ -55,24 +59,24 @@ function FaqForm({ faq, onDone }: { faq?: Faq; onDone: () => void }) {
   return (
     <form
       noValidate
-      onSubmit={handleSubmit((values) => run(() => saveFaqAction(values), "FAQ saved", onDone))}
+      onSubmit={handleSubmit((values) => run(() => saveFaqAction(values), tf.saved, onDone))}
       className="grid gap-3 rounded-lg border border-brand/30 bg-brand/5 p-4"
     >
-      <Field label="Question" error={errors.question?.message}>
+      <Field label={tf.question} error={errors.question?.message}>
         <input {...register("question")} className={inputCls} />
       </Field>
-      <Field label="Answer" error={errors.answer?.message}>
+      <Field label={tf.answer} error={errors.answer?.message}>
         <textarea {...register("answer")} rows={4} className={textareaCls} />
       </Field>
       <div className="flex flex-wrap items-end gap-4">
-        <Field label="Sort order" className="w-28">
+        <Field label={admin.common.sortOrder} className="w-28">
           <input type="number" {...register("sortOrder")} className={inputCls} />
         </Field>
-        <Toggle label="Published" {...register("published")} />
+        <Toggle label={admin.common.published} {...register("published")} />
         <div className="ml-auto flex gap-2">
-          <button type="button" onClick={onDone} className="h-9 rounded-md px-4 text-sm text-white/70 hover:text-white">Cancel</button>
+          <button type="button" onClick={onDone} className="h-9 rounded-md px-4 text-sm text-white/70 hover:text-white">{admin.common.cancel}</button>
           <button type="submit" disabled={pending} className="flex h-9 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white">
-            {pending && <Loader2Icon className="size-4 animate-spin" />} Save
+            {pending && <Loader2Icon className="size-4 animate-spin" />} {admin.common.save}
           </button>
         </div>
       </div>
@@ -95,7 +99,7 @@ export function FaqEditor({ faqs }: { faqs: Faq[] }) {
       </AnimatePresence>
       {editing !== "new" && (
         <button type="button" onClick={() => setEditing("new")} className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white">
-          <PlusIcon className="size-4" /> New question
+          <PlusIcon className="size-4" /> {tf.newQuestion}
         </button>
       )}
       {faqs.map((faq) =>
@@ -106,17 +110,17 @@ export function FaqEditor({ faqs }: { faqs: Faq[] }) {
             <span className="mt-0.5 font-mono text-xs text-white/40">{faq.sortOrder}</span>
             <div className="min-w-0 flex-1">
               <p className="font-semibold">
-                {faq.question} {!faq.published && <span className="ml-2 text-xs text-white/40">(draft)</span>}
+                {faq.question} {!faq.published && <span className="ml-2 text-xs text-white/40">{tf.draftSuffix}</span>}
               </p>
               <p className="mt-1 line-clamp-2 text-sm text-white/60">{faq.answer}</p>
             </div>
-            <button type="button" onClick={() => setEditing(faq.id)} aria-label="Edit" className="text-white/60 hover:text-white">
+            <button type="button" onClick={() => setEditing(faq.id)} aria-label={admin.common.edit} className="text-white/60 hover:text-white">
               <PencilIcon className="size-4" />
             </button>
             <button
               type="button"
-              aria-label="Delete"
-              onClick={() => confirm("Delete this question?") && run(() => deleteFaqAction(faq.id), "Deleted")}
+              aria-label={admin.common.delete}
+              onClick={() => confirm(tf.deleteConfirm) && run(() => deleteFaqAction(faq.id), tf.deleted)}
               className="text-white/60 hover:text-destructive"
             >
               <Trash2Icon className="size-4" />
@@ -150,33 +154,33 @@ function PartnerForm({ partner, onDone }: { partner?: Partner; onDone: () => voi
   return (
     <form
       noValidate
-      onSubmit={handleSubmit((values) => run(() => savePartnerAction(values), "Partner saved", onDone))}
+      onSubmit={handleSubmit((values) => run(() => savePartnerAction(values), tp.saved, onDone))}
       className="grid items-end gap-3 rounded-lg border border-brand/30 bg-brand/5 p-4 md:grid-cols-[1fr_120px_90px_90px_auto]"
     >
-      <Field label="Server name" error={errors.name?.message}>
+      <Field label={tp.name} error={errors.name?.message}>
         <input {...register("name")} className={inputCls} />
       </Field>
-      <Field label="Players avg" error={errors.playersAvg?.message}>
+      <Field label={tp.playersAvg} error={errors.playersAvg?.message}>
         <input type="number" {...register("playersAvg")} className={inputCls} />
       </Field>
-      <Field label="Color">
+      <Field label={tp.color}>
         <input type="color" {...register("color")} defaultValue={partner?.color ?? "#7c5cff"} className={`${inputCls} p-1`} />
       </Field>
-      <Field label="Order">
+      <Field label={tp.order}>
         <input type="number" {...register("sortOrder")} className={inputCls} />
       </Field>
-      <Field label="Logo" hint="Optional. Empty = first letter on the color" error={errors.logoUrl?.message} className="md:col-span-4">
+      <Field label={tp.logo} hint={tp.logoHint} error={errors.logoUrl?.message} className="md:col-span-4">
         <div className="flex gap-2">
           <input {...register("logoUrl")} placeholder="https://…" className={inputCls} />
           <ImageUploadButton kind="logo" onUploaded={(url) => setValue("logoUrl", url, { shouldDirty: true })} />
         </div>
       </Field>
       <div className="flex gap-2">
-        <button type="button" onClick={onDone} aria-label="Cancel" className="grid size-10 place-items-center rounded-md text-white/60 hover:text-white">
+        <button type="button" onClick={onDone} aria-label={admin.common.cancel} className="grid size-10 place-items-center rounded-md text-white/60 hover:text-white">
           <XIcon className="size-4" />
         </button>
         <button type="submit" disabled={pending} className="flex h-10 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white">
-          {pending && <Loader2Icon className="size-4 animate-spin" />} Save
+          {pending && <Loader2Icon className="size-4 animate-spin" />} {admin.common.save}
         </button>
       </div>
     </form>
@@ -193,7 +197,7 @@ export function PartnerEditor({ partners }: { partners: Partner[] }) {
         <PartnerForm onDone={() => setEditing(null)} />
       ) : (
         <button type="button" onClick={() => setEditing("new")} className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white">
-          <PlusIcon className="size-4" /> New partner server
+          <PlusIcon className="size-4" /> {tp.newPartner}
         </button>
       )}
       {partners.map((p) =>
@@ -211,15 +215,15 @@ export function PartnerEditor({ partners }: { partners: Partner[] }) {
             )}
             <div className="flex-1">
               <p className="font-semibold">{p.name}</p>
-              <p className="text-xs text-white/50">{p.playersAvg} players avg</p>
+              <p className="text-xs text-white/50">{tp.playersAvgText(p.playersAvg)}</p>
             </div>
-            <button type="button" onClick={() => setEditing(p.id)} aria-label="Edit" className="text-white/60 hover:text-white">
+            <button type="button" onClick={() => setEditing(p.id)} aria-label={admin.common.edit} className="text-white/60 hover:text-white">
               <PencilIcon className="size-4" />
             </button>
             <button
               type="button"
-              aria-label="Delete"
-              onClick={() => confirm(`Delete ${p.name}?`) && run(() => deletePartnerAction(p.id), "Deleted")}
+              aria-label={admin.common.delete}
+              onClick={() => confirm(admin.common.deleteConfirm(p.name)) && run(() => deletePartnerAction(p.id), tp.deleted)}
               className="text-white/60 hover:text-destructive"
             >
               <Trash2Icon className="size-4" />

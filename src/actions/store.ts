@@ -11,6 +11,9 @@ import { getOwnedProductIds } from "@/lib/data/account";
 import { syncDiscordMember } from "@/lib/discord";
 import { consumeCoupon, priceCart } from "@/lib/promotions";
 import { checkoutSchema, contactSchema } from "@/lib/validations/store";
+import { site } from "@/lang/site";
+
+const t = site.checkout;
 
 export type CheckoutResult =
   | { ok: true; orderId: string; purchased: number; gifted: number }
@@ -36,7 +39,7 @@ function licenseKey() {
 /** Server-priced totals for the cart drawer (coupon + free gifts). */
 export async function previewCartAction(input: unknown): Promise<CartPreview> {
   const parsed = checkoutSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid cart" };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? t.invalidCart };
 
   const user = await getActionUser();
   const owned = user ? await getOwnedProductIds(user.id) : undefined;
@@ -69,10 +72,10 @@ export async function previewCartAction(input: unknown): Promise<CartPreview> {
  */
 export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
   const user = await getActionUser();
-  if (!user) return { ok: false, error: "Please log in to check out", unauthenticated: true };
+  if (!user) return { ok: false, error: t.loginToCheckout, unauthenticated: true };
 
   const parsed = checkoutSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid cart" };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? t.invalidCart };
 
   const owned = await getOwnedProductIds(user.id);
   const cart = await priceCart(parsed.data.productIds, {
@@ -82,7 +85,7 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
   });
   if (cart.couponError) return { ok: false, error: cart.couponError };
   if (cart.items.length === 0 && cart.gifts.length === 0) {
-    return { ok: false, error: "You already own everything in your cart" };
+    return { ok: false, error: t.alreadyOwned };
   }
 
   let orderId: string;
@@ -130,7 +133,7 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
     });
   } catch (error) {
     if (error instanceof Error && error.message === "COUPON_USED_UP") {
-      return { ok: false, error: "This coupon has just been used up" };
+      return { ok: false, error: site.coupons.justUsedUp };
     }
     throw error;
   }
@@ -144,14 +147,14 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
 /** Free add-ons are "claimed" instead of bought. */
 export async function claimFreeAction(productId: unknown): Promise<CheckoutResult> {
   const user = await getActionUser();
-  if (!user) return { ok: false, error: "Please log in first", unauthenticated: true };
+  if (!user) return { ok: false, error: t.loginFirst, unauthenticated: true };
 
   const parsed = checkoutSchema.safeParse({ productIds: [productId] });
-  if (!parsed.success) return { ok: false, error: "Invalid product" };
+  if (!parsed.success) return { ok: false, error: t.invalidProduct };
 
   const product = await db.query.products.findFirst({ where: eq(products.id, parsed.data.productIds[0]) });
   if (!product || !product.published || product.priceCents !== 0) {
-    return { ok: false, error: "This product can't be claimed for free" };
+    return { ok: false, error: t.cannotClaim };
   }
   return checkoutAction({ productIds: [product.id] });
 }
@@ -160,7 +163,7 @@ export type ContactResult = { ok: true } | { ok: false; error: string };
 
 export async function sendContactAction(input: unknown): Promise<ContactResult> {
   const parsed = contactSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid message" };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? site.common.invalidData };
 
   await db.insert(contactMessages).values(parsed.data);
   return { ok: true };

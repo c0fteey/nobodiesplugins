@@ -1,17 +1,21 @@
 import { z } from "zod";
+import "@/lang/zod";
+import { site } from "@/lang/site";
+
+const v = site.validation;
 
 // Shared by the client forms (React Hook Form) and the server actions
-const email = z.email("Enter a valid email address").trim().toLowerCase();
+const email = z.email(v.email).trim().toLowerCase();
 const password = z
   .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(72, "Password can be at most 72 characters")
-  .regex(/[a-zA-Z]/, "Password must contain a letter")
-  .regex(/[0-9]/, "Password must contain a number");
+  .min(8, v.passwordMin)
+  .max(72, v.passwordMax)
+  .regex(/[a-zA-Z]/, v.passwordLetter)
+  .regex(/[0-9]/, v.passwordNumber);
 
 export const signInSchema = z.object({
   email,
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(1, v.passwordRequired),
   remember: z.boolean().optional(),
 });
 
@@ -20,26 +24,26 @@ export const signUpSchema = z
     email,
     password,
     confirmPassword: z.string(),
-    acceptTerms: z.literal(true, { error: "You must accept the Terms & Conditions" }),
+    acceptTerms: z.literal(true, { error: v.acceptTerms }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: v.passwordsMismatch,
     path: ["confirmPassword"],
   });
 
 export const profileSchema = z.object({
-  name: z.string().trim().min(2, "Name must be at least 2 characters").max(60),
+  name: z.string().trim().min(2, v.nameMin).max(60),
   email,
 });
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current password is required"),
+    currentPassword: z.string().min(1, v.currentPasswordRequired),
     newPassword: password,
     confirmPassword: z.string(),
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
-    message: "Passwords don't match",
+    message: v.passwordsMismatch,
     path: ["confirmPassword"],
   });
 

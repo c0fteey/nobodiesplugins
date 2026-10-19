@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { blocksSchema, highlightsSchema } from "@/lib/content-blocks";
+import "@/lang/zod";
+import { admin } from "@/lang/admin";
+import { site } from "@/lang/site";
+
+const v = site.validation;
+const a = admin.validation;
 
 // Accepts "", null or a URL. The client resolver already maps "" to null and the
 // server parses that output again, so null must be valid input too.
@@ -7,33 +13,33 @@ const optionalUrl = z
   .string()
   .trim()
   .nullish()
-  .refine((v) => !v || /^https?:\/\/\S+$/.test(v), "Must be an http(s) URL")
+  .refine((v) => !v || /^https?:\/\/\S+$/.test(v), a.url)
   .transform((v) => v || null);
 
-const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Use a hex color like #5b2bff");
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, a.hexColor);
 const slug = z
   .string()
   .trim()
   .min(2)
   .max(80)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Lowercase letters, numbers and dashes only");
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, a.slug);
 
 export const couponCodeSchema = z
   .string()
   .trim()
   .max(40)
-  .regex(/^[A-Za-z0-9_-]*$/, "Coupon codes only contain letters, numbers, - and _");
+  .regex(/^[A-Za-z0-9_-]*$/, v.couponChars);
 
 export const checkoutSchema = z.object({
-  productIds: z.array(z.uuid()).min(1, "Your cart is empty").max(50),
+  productIds: z.array(z.uuid()).min(1, v.emptyCart).max(50),
   couponCode: couponCodeSchema.nullish(),
 });
 
 export const contactSchema = z.object({
   name: z.string().trim().max(80).optional().default(""),
-  email: z.email("Enter a valid email address").trim(),
+  email: z.email(v.email).trim(),
   subject: z.enum(["Technical Support", "Billing", "Feature Request", "Other"]),
-  message: z.string().trim().min(10, "Message must be at least 10 characters").max(4000),
+  message: z.string().trim().min(10, v.messageMin).max(4000),
 });
 
 export const productSchema = z
@@ -65,11 +71,11 @@ export const productSchema = z
     content: blocksSchema.default([]),
   })
   .refine((p) => p.type !== "addon" || !!p.parentId, {
-    message: "Add-ons must belong to a plugin",
+    message: a.addonParent,
     path: ["parentId"],
   })
   .refine((p) => p.compareAt == null || p.compareAt === 0 || p.compareAt > p.price, {
-    message: "Compare-at price must be higher than the price",
+    message: a.compareAt,
     path: ["compareAt"],
   });
 
@@ -103,7 +109,7 @@ export const partnerSchema = z.object({
 
 export const announcementSchema = z.object({
   enabled: z.boolean(),
-  title: z.string().trim().min(1, "Title is required").max(60),
+  title: z.string().trim().min(1, a.titleRequired).max(60),
   badge: z.string().trim().max(20),
   text: z.string().trim().max(60),
   cta: z.string().trim().max(30),
@@ -111,11 +117,11 @@ export const announcementSchema = z.object({
     .string()
     .trim()
     .max(200)
-    .refine((v) => v === "" || v.startsWith("/") || /^https?:\/\//.test(v), "Use /path or an https:// link"),
+    .refine((v) => v === "" || v.startsWith("/") || /^https?:\/\//.test(v), a.href),
 });
 
 const navItemSchema = z.object({
-  label: z.string().trim().min(1, "Label is required").max(30),
+  label: z.string().trim().min(1, a.labelRequired).max(30),
   href: z.string().trim().min(1).max(100),
   visible: z.boolean(),
 });
@@ -145,7 +151,7 @@ const optionalDate = z
     if (v == null || v === "") return null;
     const date = v instanceof Date ? v : new Date(v);
     if (Number.isNaN(date.getTime())) {
-      ctx.addIssue({ code: "custom", message: "Invalid date" });
+      ctx.addIssue({ code: "custom", message: a.invalidDate });
       return z.NEVER;
     }
     return date;
@@ -157,14 +163,14 @@ export const couponSchema = z
     code: z
       .string()
       .trim()
-      .min(3, "At least 3 characters")
+      .min(3, a.min3)
       .max(40)
-      .regex(/^[A-Za-z0-9_-]+$/, "Letters, numbers, - and _ only")
+      .regex(/^[A-Za-z0-9_-]+$/, a.codeChars)
       .transform((v) => v.toUpperCase()),
     description: z.string().trim().max(200).default(""),
     type: z.enum(["percent", "fixed"]),
     // percent: 1-100, fixed: euros (converted to cents in the action)
-    amount: z.coerce.number().positive("Must be more than 0").max(10000),
+    amount: z.coerce.number().positive(a.positive).max(10000),
     minSubtotal: z.coerce.number().min(0).max(10000).default(0),
     maxUses: z.coerce.number().int().min(1).max(1_000_000).nullable().default(null),
     perUserLimit: z.coerce.number().int().min(1).max(1000).default(1),
@@ -172,7 +178,7 @@ export const couponSchema = z
       .string()
       .trim()
       .toLowerCase()
-      .refine((v) => v === "" || z.email().safeParse(v).success, "Enter a valid email")
+      .refine((v) => v === "" || z.email().safeParse(v).success, a.email)
       .default(""),
     productIds: z.array(z.uuid()).max(200).default([]),
     creatorName: z.string().trim().max(60).default(""),
@@ -180,9 +186,9 @@ export const couponSchema = z
     expiresAt: optionalDate,
     active: z.boolean().default(true),
   })
-  .refine((c) => c.type !== "percent" || c.amount <= 100, { message: "Percent can't exceed 100", path: ["amount"] })
+  .refine((c) => c.type !== "percent" || c.amount <= 100, { message: a.percentMax, path: ["amount"] })
   .refine((c) => !c.startsAt || !c.expiresAt || c.expiresAt > c.startsAt, {
-    message: "Must end after it starts",
+    message: a.endAfterStart,
     path: ["expiresAt"],
   });
 
@@ -190,20 +196,20 @@ export const campaignSchema = z
   .object({
     id: z.uuid().optional(),
     name: z.string().trim().min(2).max(80),
-    label: z.string().trim().min(1).max(30).default("LAUNCH OFFER"),
+    label: z.string().trim().min(1).max(30).default(admin.campaigns.form.defaultBadge),
     headline: z.string().trim().min(5).max(120),
     text: z.string().trim().max(300).default(""),
-    triggerProductId: z.uuid("Choose the product to buy"),
-    rewardProductId: z.uuid("Choose the free product"),
+    triggerProductId: z.uuid(a.chooseTrigger),
+    rewardProductId: z.uuid(a.chooseReward),
     startsAt: optionalDate,
     endsAt: optionalDate,
     active: z.boolean().default(true),
   })
   .refine((c) => c.triggerProductId !== c.rewardProductId, {
-    message: "The free product must be different",
+    message: a.rewardDifferent,
     path: ["rewardProductId"],
   })
-  .refine((c) => !c.startsAt || !c.endsAt || c.endsAt > c.startsAt, { message: "Must end after it starts", path: ["endsAt"] });
+  .refine((c) => !c.startsAt || !c.endsAt || c.endsAt > c.startsAt, { message: a.endAfterStart, path: ["endsAt"] });
 
 export type ProductInput = z.input<typeof productSchema>;
 export type DocInput = z.input<typeof docSchema>;

@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { getAllProducts, getProductById } from "@/lib/data/admin";
 import { AdminHeader } from "@/components/admin/ui";
 import { ProductForm } from "@/components/admin/product-form";
+import { admin } from "@/lang/admin";
 
-export const metadata: Metadata = { title: "Edit product · Admin" };
+export const metadata: Metadata = { title: admin.meta.editProduct + admin.meta.suffix };
 
 // "/admin/products/new" creates, any other id edits
 export default async function EditProductPage({ params }: PageProps<"/admin/products/[id]">) {
@@ -17,7 +18,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
 
   return (
     <>
-      <AdminHeader title={isNew ? "New product" : `Edit ${product!.name}`} />
+      <AdminHeader title={isNew ? admin.products.newProduct : admin.common.editTitle(product!.name)} />
       <ProductForm product={product} plugins={plugins} />
     </>
   );

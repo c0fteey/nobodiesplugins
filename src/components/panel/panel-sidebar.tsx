@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { site } from "@/lang/site";
 
 const ICONS = {
   home: HomeIcon,
@@ -142,19 +143,19 @@ export function PanelSidebar({ items, bottom }: { items: PanelNavItem[]; bottom:
 
   return (
     <aside className="sticky top-0 flex h-screen w-[72px] shrink-0 flex-col items-center border-r border-white/5 bg-[#151515] py-6 sm:w-[104px]">
-      <Link href="/" aria-label="NOBODIES store" className="mb-12">
+      <Link href="/" aria-label={site.panel.nav.storeHome} className="mb-12">
         <LogoMark className="text-[28px] [--logo-cut:#151515]" />
       </Link>
       <nav className="flex w-full flex-1 flex-col">{items.map(renderItem)}</nav>
       <nav className="flex w-full flex-col">
         {bottom.map(renderItem)}
-        <Link href="/" aria-label="Back to store" title="Back to store" className="flex h-14 items-center justify-center text-white/70 transition hover:text-white">
+        <Link href="/" aria-label={site.panel.nav.backToStore} title={site.panel.nav.backToStore} className="flex h-14 items-center justify-center text-white/70 transition hover:text-white">
           <ArrowLeftIcon className="size-6" strokeWidth={1.6} />
         </Link>
         <button
           type="button"
-          aria-label="Log out"
-          title="Log out"
+          aria-label={site.panel.nav.logout}
+          title={site.panel.nav.logout}
           disabled={pending}
           onClick={() => startTransition(() => signOutAction())}
           className="flex h-14 items-center justify-center text-white/70 transition hover:text-white disabled:opacity-50"

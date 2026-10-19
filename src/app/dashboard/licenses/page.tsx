@@ -5,8 +5,11 @@ import { requireUser } from "@/lib/auth-guard";
 import { countConnected, getLicenses } from "@/lib/data/account";
 import { LicenseTable } from "@/components/panel/license-table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "Licenses" };
+const t = site.licenses;
+
+export const metadata: Metadata = { title: site.meta.pages.licenses };
 
 export default function LicensesPage() {
   return (
@@ -26,24 +29,24 @@ async function Licenses() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard icon={ShieldIcon} label="TOTAL ACTIVE LICENSES" value={active.length} />
+        <StatCard icon={ShieldIcon} label={t.totalActive} value={active.length} />
         <StatCard
           icon={ZapIcon}
-          label="ACTIVE SESSIONS"
+          label={t.sessions}
           value={0}
-          note={<><ZapIcon className="size-3.5" /> {activations} activations all-time</>}
+          note={<><ZapIcon className="size-3.5" /> {t.activationsAllTime(activations)}</>}
         />
         <StatCard
           icon={ServerIcon}
-          label="CONNECTED SERVERS"
+          label={t.connected}
           value={connected}
-          note={<><ServerIcon className="size-3.5" /> {connected ? `${connected} online` : "No servers online"}</>}
+          note={<><ServerIcon className="size-3.5" /> {connected ? t.online(connected) : t.noneOnline}</>}
         />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
         <section className="rounded-xl border border-white/10 bg-[#171717] p-8">
-          <h2 className="text-xl font-bold">Managed Licenses</h2>
+          <h2 className="text-xl font-bold">{t.managed}</h2>
           <LicenseTable
             licenses={rows.map((r) => ({
               id: r.license.id,
@@ -56,12 +59,12 @@ async function Licenses() {
           />
         </section>
         <section className="flex flex-col rounded-xl border border-white/10 bg-[#171717] p-8">
-          <h2 className="text-xl font-bold">Recent Activations</h2>
+          <h2 className="text-xl font-bold">{t.recent}</h2>
           <div className="flex flex-1 flex-col items-center justify-center py-12 text-center">
             <LogInIcon className="size-8 text-white/40" strokeWidth={1.4} />
-            <p className="mt-4 text-sm font-bold text-white/70">No activations yet</p>
+            <p className="mt-4 text-sm font-bold text-white/70">{t.noActivations}</p>
             <p className="mt-1 max-w-[240px] text-xs text-white/40">
-              Server activations will appear here once your licences connect from a running server.
+              {t.noActivationsText}
             </p>
           </div>
         </section>

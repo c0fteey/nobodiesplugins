@@ -4,8 +4,12 @@ import { getAllProducts } from "@/lib/data/admin";
 import { formatPrice, PRODUCT_TYPE_LABEL } from "@/lib/format";
 import { AdminCard, AdminHeader, StatusPill, td, th } from "@/components/admin/ui";
 import { ProductArt } from "@/components/store/product-art";
+import { admin } from "@/lang/admin";
 
-export const metadata: Metadata = { title: "Products · Admin" };
+const t = admin.products;
+const c$ = admin.common;
+
+export const metadata: Metadata = { title: admin.meta.products + admin.meta.suffix };
 
 export default async function AdminProductsPage() {
   const products = await getAllProducts();
@@ -14,19 +18,19 @@ export default async function AdminProductsPage() {
   return (
     <>
       <AdminHeader
-        title="Products"
-        description="Plugins, add-ons, models and builds. Changes show up on the store instantly."
-        action={{ href: "/admin/products/new", label: "New product" }}
+        title={t.title}
+        description={t.description}
+        action={{ href: "/admin/products/new", label: t.newProduct }}
       />
       <AdminCard className="overflow-x-auto">
         <table className="w-full min-w-[760px]">
           <thead className="border-b border-white/5">
             <tr>
-              <th className={th}>PRODUCT</th>
-              <th className={th}>TYPE</th>
-              <th className={th}>PRICE</th>
-              <th className={th}>STATUS</th>
-              <th className={th}>ORDER</th>
+              <th className={th}>{t.columns.product}</th>
+              <th className={th}>{t.columns.type}</th>
+              <th className={th}>{t.columns.price}</th>
+              <th className={th}>{t.columns.status}</th>
+              <th className={th}>{t.columns.order}</th>
             </tr>
           </thead>
           <tbody>
@@ -39,7 +43,7 @@ export default async function AdminProductsPage() {
                       <span className="block font-semibold hover:text-brand-soft">{p.name}</span>
                       <span className="text-xs text-white/50">
                         /{p.slug}
-                        {p.parentId && ` · for ${parentName.get(p.parentId) ?? "?"}`}
+                        {p.parentId && t.forParent(parentName.get(p.parentId) ?? "?")}
                       </span>
                     </span>
                   </Link>
@@ -47,11 +51,11 @@ export default async function AdminProductsPage() {
                 <td className={td}>{PRODUCT_TYPE_LABEL[p.type]}</td>
                 <td className={td}>
                   {p.compareAtCents && <s className="mr-2 text-white/40">{formatPrice(p.compareAtCents)}</s>}
-                  <span className="font-semibold">{p.priceCents ? formatPrice(p.priceCents) : "Free"}</span>
+                  <span className="font-semibold">{p.priceCents ? formatPrice(p.priceCents) : c$.free}</span>
                 </td>
                 <td className={`${td} space-x-1.5`}>
-                  <StatusPill on={p.published} onLabel="Published" offLabel="Draft" />
-                  {p.featured && <StatusPill on onLabel="Featured" offLabel="" />}
+                  <StatusPill on={p.published} onLabel={c$.published} offLabel={c$.draft} />
+                  {p.featured && <StatusPill on onLabel={c$.featured} offLabel="" />}
                 </td>
                 <td className={`${td} text-white/60`}>{p.sortOrder}</td>
               </tr>

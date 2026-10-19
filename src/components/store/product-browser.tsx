@@ -12,14 +12,17 @@ import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ProductArt } from "./product-art";
 import { ProductCard } from "./product-card";
+import { site } from "@/lang/site";
+
+const t = site.browser;
 
 export type BrowserCategory = { value: string; label: string; match: (p: Product) => boolean };
 
 const SORTS = {
-  relevance: { label: "Relevance", fn: (a: Product, b: Product) => a.sortOrder - b.sortOrder },
-  "price-asc": { label: "Price: low to high", fn: (a: Product, b: Product) => a.priceCents - b.priceCents },
-  "price-desc": { label: "Price: high to low", fn: (a: Product, b: Product) => b.priceCents - a.priceCents },
-  newest: { label: "Newest", fn: (a: Product, b: Product) => +new Date(b.createdAt) - +new Date(a.createdAt) },
+  relevance: { label: t.sorts.relevance, fn: (a: Product, b: Product) => a.sortOrder - b.sortOrder },
+  "price-asc": { label: t.sorts.priceAsc, fn: (a: Product, b: Product) => a.priceCents - b.priceCents },
+  "price-desc": { label: t.sorts.priceDesc, fn: (a: Product, b: Product) => b.priceCents - a.priceCents },
+  newest: { label: t.sorts.newest, fn: (a: Product, b: Product) => +new Date(b.createdAt) - +new Date(a.createdAt) },
 } as const;
 type SortKey = keyof typeof SORTS;
 const SORT_OPTIONS = (Object.keys(SORTS) as SortKey[]).map((value) => ({ value, label: SORTS[value].label }));
@@ -27,7 +30,7 @@ const SORT_OPTIONS = (Object.keys(SORTS) as SortKey[]).map((value) => ({ value, 
 export function ProductBrowser({
   products,
   categories,
-  allLabel = "All",
+  allLabel = site.common.all,
 }: {
   products: Product[];
   categories: BrowserCategory[];
@@ -80,14 +83,14 @@ export function ProductBrowser({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search products"
-            aria-label="Search products"
+            placeholder={t.searchPlaceholder}
+            aria-label={t.searchLabel}
             className="h-10 w-full rounded-full border border-white/10 bg-transparent pr-9 pl-4 text-sm outline-none placeholder:text-white/40 focus:border-brand"
           />
           <SearchIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-white/50" />
         </div>
 
-        <FilterGroup title="Category">
+        <FilterGroup title={t.category}>
           <div className="flex flex-wrap gap-1.5">
             {[{ value: "all", label: allLabel }, ...categories].map((c) => (
               <Chip key={c.value} active={category === c.value} onClick={() => setCategory(c.value)}>
@@ -97,7 +100,7 @@ export function ProductBrowser({
           </div>
         </FilterGroup>
 
-        <FilterGroup title="Price">
+        <FilterGroup title={t.price}>
           <Slider
             value={price}
             min={0}
@@ -105,7 +108,7 @@ export function ProductBrowser({
             step={1}
             onValueChange={(v) => setPrice(Array.isArray(v) ? [...v] : [0, v])}
             className="mt-2 [&_[data-slot=slider-range]]:bg-brand [&_[data-slot=slider-thumb]]:border-brand"
-            aria-label="Price range"
+            aria-label={t.priceRange}
           />
           <div className="mt-2 flex justify-between text-xs text-white/60">
             <span>€{price[0]}</span>
@@ -114,7 +117,7 @@ export function ProductBrowser({
         </FilterGroup>
 
         {allTags.length > 0 && (
-          <FilterGroup title="Tags">
+          <FilterGroup title={t.tags}>
             <div className="flex flex-wrap gap-1.5">
               {allTags.map((tag) => (
                 <Chip key={tag} active={tags.includes(tag)} onClick={() => toggleTag(tag)} subtle>
@@ -126,7 +129,7 @@ export function ProductBrowser({
         )}
 
         {allVersions.length > 0 && (
-          <FilterGroup title="Minecraft Version">
+          <FilterGroup title={t.mcVersion}>
             <div className="relative flex justify-between pt-1">
               <span aria-hidden className="absolute top-[11px] right-2 left-2 h-px bg-white/20" />
               {allVersions.map((v) => (
@@ -150,18 +153,18 @@ export function ProductBrowser({
           </FilterGroup>
         )}
 
-        <FilterGroup title="Sort by">
+        <FilterGroup title={t.sortBy}>
           <ChoiceSelect
             value={sort}
             onChange={setSort}
             options={SORT_OPTIONS}
-            aria-label="Sort products"
+            aria-label={t.sortLabel}
             className="h-9 rounded-md border-white/10 bg-[#141414] px-3 text-xs dark:bg-[#141414]"
           />
         </FilterGroup>
 
         {popular.length > 0 && (
-          <FilterGroup title="Popular Products">
+          <FilterGroup title={t.popular}>
             <ul className="space-y-3">
               {popular.map((p) => (
                 <li key={p.id}>
@@ -186,7 +189,7 @@ export function ProductBrowser({
         {visible.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-white/10 py-24 text-center text-white/60">
             <SearchXIcon className="size-8" />
-            No products match your filters.
+            {t.empty}
           </div>
         ) : (
           <motion.div layout className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">

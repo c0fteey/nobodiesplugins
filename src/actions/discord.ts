@@ -7,6 +7,9 @@ import { db } from "@/db";
 import { accounts, users } from "@/db/schema";
 import { getActionUser } from "@/lib/auth-guard";
 import { revokeManagedRoles, syncDiscordMember } from "@/lib/discord";
+import { site } from "@/lang/site";
+
+const t = site.discord.results;
 
 export type DiscordResult = { ok: true; message: string } | { ok: false; error: string };
 
@@ -21,12 +24,12 @@ export async function connectDiscordAction() {
 
 export async function disconnectDiscordAction(): Promise<DiscordResult> {
   const user = await getActionUser();
-  if (!user) return { ok: false, error: "Not signed in" };
+  if (!user) return { ok: false, error: site.common.notSignedIn };
 
   const account = await db.query.accounts.findFirst({
     where: and(eq(accounts.userId, user.id), eq(accounts.provider, "discord")),
   });
-  if (!account) return { ok: false, error: "No Discord account linked" };
+  if (!account) return { ok: false, error: t.notLinked };
 
   // Don't lock people out: keep Discord if it's their only way to sign in
   const other = await db.query.accounts.findFirst({
@@ -34,19 +37,19 @@ export async function disconnectDiscordAction(): Promise<DiscordResult> {
     columns: { provider: true },
   });
   if (!user.passwordHash && !other) {
-    return { ok: false, error: "Discord is your only sign-in method. Set up another login before disconnecting." };
+    return { ok: false, error: t.onlyLogin };
   }
 
   await revokeManagedRoles(account.providerAccountId);
   await db.delete(accounts).where(and(eq(accounts.userId, user.id), eq(accounts.provider, "discord")));
   await db.update(users).set({ discordUsername: null }).where(eq(users.id, user.id));
   revalidatePath("/dashboard", "layout");
-  return { ok: true, message: "Discord disconnected" };
+  return { ok: true, message: t.disconnected };
 }
 
 export async function resyncMyDiscordAction(): Promise<DiscordResult> {
   const user = await getActionUser();
-  if (!user) return { ok: false, error: "Not signed in" };
+  if (!user) return { ok: false, error: site.common.notSignedIn };
   const result = await syncDiscordMember(user.id);
   return result.ok ? { ok: true, message: result.message } : { ok: false, error: result.message };
 }

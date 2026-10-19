@@ -4,6 +4,9 @@ import { useState } from "react";
 import { CheckIcon, CircleArrowDownIcon, CopyIcon, EyeIcon, EyeOffIcon } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { site } from "@/lang/site";
+
+const t = site.licenses;
 
 type LicenseRow = {
   id: string;
@@ -27,15 +30,15 @@ export function LicenseTable({ licenses }: { licenses: LicenseRow[] }) {
     try {
       await navigator.clipboard.writeText(row.key);
       setCopied(row.id);
-      toast.success("License key copied");
+      toast.success(t.copied);
       setTimeout(() => setCopied(null), 1500);
     } catch {
-      toast.error("Couldn't access the clipboard");
+      toast.error(t.clipboardError);
     }
   }
 
   if (licenses.length === 0) {
-    return <p className="mt-10 text-sm text-white/50">Licenses for plugins you buy will show up here.</p>;
+    return <p className="mt-10 text-sm text-white/50">{t.empty}</p>;
   }
 
   return (
@@ -43,11 +46,11 @@ export function LicenseTable({ licenses }: { licenses: LicenseRow[] }) {
       <table className="w-full min-w-[560px] text-left">
         <thead>
           <tr className="text-[11px] font-bold tracking-[0.14em] text-white/60">
-            <th className="pb-6 font-bold">LICENSE KEY</th>
-            <th className="pb-6 font-bold">PRODUCT</th>
-            <th className="pb-6 font-bold">STATUS</th>
-            <th className="pb-6 font-bold">SERVERS</th>
-            <th className="pb-6 text-right font-bold">ACTIONS</th>
+            <th className="pb-6 font-bold">{t.columns.key}</th>
+            <th className="pb-6 font-bold">{t.columns.product}</th>
+            <th className="pb-6 font-bold">{t.columns.status}</th>
+            <th className="pb-6 font-bold">{t.columns.servers}</th>
+            <th className="pb-6 text-right font-bold">{t.columns.actions}</th>
           </tr>
         </thead>
         <tbody>
@@ -56,12 +59,12 @@ export function LicenseTable({ licenses }: { licenses: LicenseRow[] }) {
               <td className="py-5 font-mono text-xs">
                 <span className="inline-flex items-center gap-2">
                   {revealed === row.id ? row.key : mask(row.key)}
-                  <button type="button" aria-label="Copy license key" onClick={() => copy(row)} className="text-white/50 hover:text-white">
+                  <button type="button" aria-label={t.copy} onClick={() => copy(row)} className="text-white/50 hover:text-white">
                     {copied === row.id ? <CheckIcon className="size-3.5 text-success" /> : <CopyIcon className="size-3.5" />}
                   </button>
                   <button
                     type="button"
-                    aria-label={revealed === row.id ? "Hide key" : "Show key"}
+                    aria-label={revealed === row.id ? t.hide : t.show}
                     onClick={() => setRevealed((cur) => (cur === row.id ? null : row.id))}
                     className="text-white/50 hover:text-white"
                   >
@@ -81,12 +84,12 @@ export function LicenseTable({ licenses }: { licenses: LicenseRow[] }) {
                     row.status === "active" ? "border-brand-soft/50 bg-brand/15 text-brand-soft" : "border-destructive/50 text-destructive",
                   )}
                 >
-                  {row.status}
+                  {t.statuses[row.status]}
                 </span>
               </td>
-              <td className="py-5 text-white/60">{row.activations ? `${row.activations} activations` : "No activity"}</td>
+              <td className="py-5 text-white/60">{row.activations ? t.activations(row.activations) : t.noActivity}</td>
               <td className="py-5 text-right">
-                <a href={`/api/download/${row.productId}`} aria-label={`Download ${row.productName}`} className="inline-flex text-brand-soft hover:text-white">
+                <a href={`/api/download/${row.productId}`} aria-label={t.download(row.productName)} className="inline-flex text-brand-soft hover:text-white">
                   <CircleArrowDownIcon className="size-5" />
                 </a>
               </td>

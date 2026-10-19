@@ -50,6 +50,13 @@
       "when": 1792407657383,
       "tag": "0006_discord",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792412242964,
+      "tag": "0007_roles",
+      "breakpoints": true
     }
   ]
 }

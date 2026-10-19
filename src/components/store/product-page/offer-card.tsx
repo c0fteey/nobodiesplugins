@@ -5,6 +5,9 @@ import type { Campaign, Product } from "@/db/schema";
 import { useNow } from "@/hooks/use-now";
 import { formatPrice } from "@/lib/format";
 import { useCart } from "../cart-provider";
+import { site } from "@/lang/site";
+
+const t = site.product.offer;
 
 function isLive(c: Campaign, now: number) {
   const start = c.startsAt ? new Date(c.startsAt).getTime() : -Infinity;
@@ -40,7 +43,7 @@ export function OfferCards({ product }: { product: Product }) {
             <p className="mt-3 text-xl leading-snug font-bold">{campaign.headline}</p>
             <p className="mt-1 text-sm text-white/70">
               {campaign.text ||
-                `Worth ${formatPrice(reward.priceCents)}. It is added to your account automatically when you buy ${product.name}.`}
+                t.defaultText(formatPrice(reward.priceCents), product.name)}
             </p>
           </div>
           {campaign.endsAt && <Countdown to={new Date(campaign.endsAt).getTime()} now={now} />}
@@ -53,15 +56,15 @@ export function OfferCards({ product }: { product: Product }) {
 function Countdown({ to, now }: { to: number; now: number }) {
   const left = Math.max(0, to - now);
   const parts = [
-    { value: Math.floor(left / 86_400_000), unit: "D" },
-    { value: Math.floor(left / 3_600_000) % 24, unit: "H" },
-    { value: Math.floor(left / 60_000) % 60, unit: "M" },
-    { value: Math.floor(left / 1000) % 60, unit: "S" },
+    { value: Math.floor(left / 86_400_000), unit: t.units.d },
+    { value: Math.floor(left / 3_600_000) % 24, unit: t.units.h },
+    { value: Math.floor(left / 60_000) % 60, unit: t.units.m },
+    { value: Math.floor(left / 1000) % 60, unit: t.units.s },
   ];
 
   return (
     <div className="shrink-0 text-center">
-      <p className="mb-2 text-xs font-bold tracking-[0.12em] text-white/60">OFFER ENDS IN</p>
+      <p className="mb-2 text-xs font-bold tracking-[0.12em] text-white/60">{t.endsIn}</p>
       <div className="flex gap-2">
         {parts.map((p) => (
           <div key={p.unit} className="w-14 rounded-lg bg-black/40 py-2">

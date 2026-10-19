@@ -3,8 +3,9 @@ import { getAllProducts, getDiscordLinkedCount, getDiscordLog, getDiscordRules }
 import { botInviteUrl, discordBotConfigured, discordLoginEnabled, getDiscordConfig, getGuildStatus } from "@/lib/discord";
 import { AdminHeader } from "@/components/admin/ui";
 import { DiscordAdmin } from "@/components/admin/discord-admin";
+import { admin } from "@/lang/admin";
 
-export const metadata: Metadata = { title: "Discord · Admin" };
+export const metadata: Metadata = { title: admin.meta.discord + admin.meta.suffix };
 
 export default async function AdminDiscordPage() {
   const [config, rules, products, log, linked] = await Promise.all([
@@ -19,7 +20,7 @@ export default async function AdminDiscordPage() {
 
   return (
     <>
-      <AdminHeader title="Discord" description="Discord login, and roles that buyers get automatically." />
+      <AdminHeader title={admin.discord.title} description={admin.discord.description} />
       <DiscordAdmin
         env={{ login: discordLoginEnabled, bot: discordBotConfigured }}
         inviteUrl={botInviteUrl}

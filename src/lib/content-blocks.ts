@@ -1,4 +1,8 @@
 import { z } from "zod";
+import "@/lang/zod";
+import { admin } from "@/lang/admin";
+
+const d = admin.blocks.defaults;
 
 // Product pages are built from these blocks, edited in the admin panel.
 // Shared by the admin editor (RHF + zod), the server actions and the renderer.
@@ -7,7 +11,7 @@ const text = (max: number) => z.string().trim().max(max);
 const url = z
   .string()
   .trim()
-  .refine((v) => v === "" || /^https?:\/\/\S+$/.test(v), "Must be an http(s) URL");
+  .refine((v) => v === "" || /^https?:\/\/\S+$/.test(v), admin.validation.url);
 
 export const BLOCK_ICONS = [
   "sparkles", "box", "zap", "shield", "coins", "store", "settings", "layers", "gift",
@@ -78,7 +82,7 @@ export const blockSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("faq"),
-    title: text(160).default("Frequently Asked Questions"),
+    title: text(160).default(d.faqTitle),
     items: z.array(z.object({ question: text(200), answer: text(2000) })).max(30),
   }),
 ]);
@@ -92,39 +96,29 @@ export type ContentBlock = z.infer<typeof blockSchema>;
 export type BlockType = ContentBlock["type"];
 export type Highlight = z.infer<typeof highlightSchema>;
 
-export const BLOCK_LABELS: Record<BlockType, string> = {
-  intro: "Intro (big headline + text)",
-  features: "Feature grid (icon cards)",
-  media: "Image + text",
-  cards: "Image cards grid",
-  stats: "Stats row",
-  list: "Two-column list",
-  chips: "Everything included (chips)",
-  video: "Video (YouTube)",
-  faq: "FAQ",
-};
+export const BLOCK_LABELS: Record<BlockType, string> = admin.blocks.labels;
 
 /** Empty block of a given type, used by the admin "Add block" menu. */
 export function emptyBlock(type: BlockType): ContentBlock {
   switch (type) {
     case "intro":
-      return { type, eyebrow: "", title: "Headline", text: "" };
+      return { type, eyebrow: "", title: d.headline, text: "" };
     case "features":
-      return { type, eyebrow: "", title: "What makes it stand out", text: "", items: [{ icon: "sparkles", title: "Feature", text: "" }] };
+      return { type, eyebrow: "", title: d.featuresTitle, text: "", items: [{ icon: "sparkles", title: d.feature, text: "" }] };
     case "media":
-      return { type, eyebrow: "", title: "Section title", text: "", imageUrl: "", imageLeft: false };
+      return { type, eyebrow: "", title: d.sectionTitle, text: "", imageUrl: "", imageLeft: false };
     case "cards":
-      return { type, eyebrow: "", title: "Section title", text: "", items: [{ title: "Card", text: "", imageUrl: "" }] };
+      return { type, eyebrow: "", title: d.sectionTitle, text: "", items: [{ title: d.card, text: "", imageUrl: "" }] };
     case "stats":
-      return { type, eyebrow: "", title: "By the numbers", text: "", items: [{ value: "100+", label: "Label" }] };
+      return { type, eyebrow: "", title: d.statsTitle, text: "", items: [{ value: "100+", label: d.statLabel }] };
     case "list":
-      return { type, eyebrow: "", title: "Section title", text: "", items: [{ title: "Item", text: "" }] };
+      return { type, eyebrow: "", title: d.sectionTitle, text: "", items: [{ title: d.item, text: "" }] };
     case "chips":
-      return { type, eyebrow: "", title: "Everything Included", text: "", items: [{ label: "Feature" }] };
+      return { type, eyebrow: "", title: d.chipsTitle, text: "", items: [{ label: d.feature }] };
     case "video":
-      return { type, eyebrow: "", title: "Showcase", text: "", url: "" };
+      return { type, eyebrow: "", title: d.videoTitle, text: "", url: "" };
     case "faq":
-      return { type, title: "Frequently Asked Questions", items: [{ question: "Question?", answer: "Answer." }] };
+      return { type, title: d.faqTitle, items: [{ question: d.question, answer: d.answer }] };
   }
 }
 

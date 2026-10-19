@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
 import { ImageUploadButton } from "@/components/media/image-upload";
 import { Field, inputCls, textareaCls, Toggle } from "./form-bits";
 import { IconBtn } from "./settings-form";
+import { admin } from "@/lang/admin";
+
+const t = admin.blocks;
+const f = t.itemFields;
 
 // The product form's content is a union of block shapes; the editor works on it loosely
 type LooseForm = {
@@ -18,27 +22,27 @@ type LooseForm = {
 
 const ITEM_FIELDS: Partial<Record<BlockType, { key: string; label: string; textarea?: boolean; icon?: boolean; image?: boolean }[]>> = {
   features: [
-    { key: "icon", label: "Icon", icon: true },
-    { key: "title", label: "Title" },
-    { key: "text", label: "Text", textarea: true },
+    { key: "icon", label: f.icon, icon: true },
+    { key: "title", label: f.title },
+    { key: "text", label: f.text, textarea: true },
   ],
   cards: [
-    { key: "title", label: "Title" },
-    { key: "text", label: "Text", textarea: true },
-    { key: "imageUrl", label: "Image URL (optional)", image: true },
+    { key: "title", label: f.title },
+    { key: "text", label: f.text, textarea: true },
+    { key: "imageUrl", label: f.imageUrl, image: true },
   ],
   stats: [
-    { key: "value", label: "Value" },
-    { key: "label", label: "Label" },
+    { key: "value", label: f.value },
+    { key: "label", label: f.label },
   ],
   list: [
-    { key: "title", label: "Title" },
-    { key: "text", label: "Text" },
+    { key: "title", label: f.title },
+    { key: "text", label: f.text },
   ],
-  chips: [{ key: "label", label: "Label" }],
+  chips: [{ key: "label", label: f.label }],
   faq: [
-    { key: "question", label: "Question" },
-    { key: "answer", label: "Answer", textarea: true },
+    { key: "question", label: f.question },
+    { key: "answer", label: f.answer, textarea: true },
   ],
 };
 
@@ -62,7 +66,7 @@ export function BlocksEditor() {
     <div className="space-y-3">
       {fields.length === 0 && (
         <p className="rounded-lg border border-dashed border-white/15 p-6 text-center text-sm text-white/50">
-          No sections yet. The product page falls back to the full description. Add sections to build a rich page.
+          {t.empty}
         </p>
       )}
       <AnimatePresence initial={false}>
@@ -87,10 +91,10 @@ export function BlocksEditor() {
                   <ChevronDownIcon className={cn("ml-auto size-4 shrink-0 text-white/40 transition", open && "rotate-180")} />
                 </button>
                 <span className="flex gap-1">
-                  <IconBtn label="Move up" disabled={i === 0} onClick={() => { move(i, i - 1); setOpenIndex(null); }}><ArrowUpIcon className="size-4" /></IconBtn>
-                  <IconBtn label="Move down" disabled={i === fields.length - 1} onClick={() => { move(i, i + 1); setOpenIndex(null); }}><ArrowDownIcon className="size-4" /></IconBtn>
-                  <IconBtn label="Duplicate" onClick={() => insert(i + 1, structuredClone(block))}><CopyIcon className="size-4" /></IconBtn>
-                  <IconBtn label="Remove" danger onClick={() => { remove(i); setOpenIndex(null); }}><Trash2Icon className="size-4" /></IconBtn>
+                  <IconBtn label={admin.common.moveUp} disabled={i === 0} onClick={() => { move(i, i - 1); setOpenIndex(null); }}><ArrowUpIcon className="size-4" /></IconBtn>
+                  <IconBtn label={admin.common.moveDown} disabled={i === fields.length - 1} onClick={() => { move(i, i + 1); setOpenIndex(null); }}><ArrowDownIcon className="size-4" /></IconBtn>
+                  <IconBtn label={admin.common.duplicate} onClick={() => insert(i + 1, structuredClone(block))}><CopyIcon className="size-4" /></IconBtn>
+                  <IconBtn label={admin.common.remove} danger onClick={() => { remove(i); setOpenIndex(null); }}><Trash2Icon className="size-4" /></IconBtn>
                 </span>
               </div>
               <AnimatePresence initial={false}>
@@ -118,7 +122,7 @@ export function BlocksEditor() {
           onClick={() => setMenuOpen((v) => !v)}
           className="inline-flex h-10 items-center gap-2 rounded-md border border-dashed border-white/20 px-4 text-sm font-semibold text-white/80 transition hover:border-brand hover:text-white"
         >
-          <PlusIcon className="size-4" /> Add section
+          <PlusIcon className="size-4" /> {t.addSection}
         </button>
         <AnimatePresence>
           {menuOpen && (
@@ -158,34 +162,34 @@ function BlockFields({ index, type }: { index: number; type: BlockType }) {
     <div className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
         {type !== "faq" && (
-          <Field label="Small label above the title (optional)">
+          <Field label={t.eyebrow}>
             <input {...register(p("eyebrow"))} className={inputCls} />
           </Field>
         )}
-        <Field label="Title" className={type === "faq" ? "md:col-span-2" : undefined}>
+        <Field label={t.title} className={type === "faq" ? "md:col-span-2" : undefined}>
           <input {...register(p("title"))} className={inputCls} />
         </Field>
       </div>
       {type !== "faq" && (
-        <Field label={type === "intro" || type === "media" ? "Text" : "Subtitle (optional)"}>
+        <Field label={type === "intro" || type === "media" ? t.text : t.subtitle}>
           <textarea {...register(p("text"))} rows={type === "intro" || type === "media" ? 4 : 2} className={textareaCls} />
         </Field>
       )}
       {type === "media" && (
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Image URL" hint="Empty = product cover art">
+          <Field label={t.imageUrl} hint={t.imageUrlHint}>
             <div className="flex gap-2">
               <input {...register(p("imageUrl"))} placeholder="https://…" className={inputCls} />
               <ImageUploadButton kind="block" onUploaded={(url) => setValue(p("imageUrl"), url, { shouldDirty: true })} />
             </div>
           </Field>
           <div className="flex items-end pb-2">
-            <Toggle label="Image on the left" {...register(p("imageLeft"))} />
+            <Toggle label={t.imageLeft} {...register(p("imageLeft"))} />
           </div>
         </div>
       )}
       {type === "video" && (
-        <Field label="YouTube link" hint="youtube.com/watch?v=… or youtu.be/…">
+        <Field label={t.youtube} hint={t.youtubeHint}>
           <input {...register(p("url"))} className={inputCls} />
         </Field>
       )}
@@ -203,7 +207,7 @@ function ItemsEditor({ index, type }: { index: number; type: BlockType }) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold text-white/80">Items ({fields.length})</p>
+      <p className="mb-2 text-xs font-semibold text-white/80">{t.items(fields.length)}</p>
       <div className="space-y-2">
         {fields.map((field, k) => (
           <div key={field.id} className="flex items-start gap-2 rounded-lg bg-white/[0.03] p-2">
@@ -232,8 +236,8 @@ function ItemsEditor({ index, type }: { index: number; type: BlockType }) {
               )}
             </div>
             <div className="flex flex-col gap-1">
-              <IconBtn label="Move up" disabled={k === 0} onClick={() => move(k, k - 1)}><ArrowUpIcon className="size-3.5" /></IconBtn>
-              <IconBtn label="Remove item" danger onClick={() => remove(k)}><XIcon className="size-3.5" /></IconBtn>
+              <IconBtn label={admin.common.moveUp} disabled={k === 0} onClick={() => move(k, k - 1)}><ArrowUpIcon className="size-3.5" /></IconBtn>
+              <IconBtn label={t.removeItem} danger onClick={() => remove(k)}><XIcon className="size-3.5" /></IconBtn>
             </div>
           </div>
         ))}
@@ -243,7 +247,7 @@ function ItemsEditor({ index, type }: { index: number; type: BlockType }) {
         onClick={() => append(EMPTY_ITEM[type] as never)}
         className="mt-2 inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-brand-soft hover:bg-brand/10"
       >
-        <PlusIcon className="size-3.5" /> Add item
+        <PlusIcon className="size-3.5" /> {t.addItem}
       </button>
     </div>
   );
@@ -257,9 +261,9 @@ export function HighlightsEditor() {
     <div className="space-y-2">
       {fields.map((field, i) => (
         <div key={field.id} className="flex gap-2">
-          <input {...register(`highlights.${i}.label`)} placeholder="Label (e.g. Folia)" className={inputCls} />
-          <input {...register(`highlights.${i}.value`)} placeholder="Value (e.g. Supported)" className={inputCls} />
-          <IconBtn label="Remove" danger onClick={() => remove(i)}><XIcon className="size-4" /></IconBtn>
+          <input {...register(`highlights.${i}.label`)} placeholder={t.highlightLabel} className={inputCls} />
+          <input {...register(`highlights.${i}.value`)} placeholder={t.highlightValue} className={inputCls} />
+          <IconBtn label={admin.common.remove} danger onClick={() => remove(i)}><XIcon className="size-4" /></IconBtn>
         </div>
       ))}
       {fields.length < 12 && (
@@ -268,7 +272,7 @@ export function HighlightsEditor() {
           onClick={() => append({ label: "", value: "" })}
           className="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold text-brand-soft hover:bg-brand/10"
         >
-          <PlusIcon className="size-3.5" /> Add key stat
+          <PlusIcon className="size-3.5" /> {t.addHighlight}
         </button>
       )}
     </div>

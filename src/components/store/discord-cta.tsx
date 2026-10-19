@@ -1,5 +1,6 @@
 import { DiscordIcon } from "@/components/brand/icons";
 import { getSettings } from "@/lib/data/store";
+import { site } from "@/lang/site";
 
 export async function DiscordCta() {
   const { discordUrl } = await getSettings();
@@ -19,7 +20,7 @@ export async function DiscordCta() {
           ))}
         </div>
         <h2 className="relative max-w-md text-3xl leading-tight font-bold sm:text-4xl">
-          Join our amazing discord for exclusive updates!
+          {site.discordCta.title}
         </h2>
         <a
           href={discordUrl}
@@ -27,7 +28,7 @@ export async function DiscordCta() {
           rel="noreferrer"
           className="relative mt-8 inline-flex h-12 items-center gap-2 rounded-full bg-white px-10 font-semibold text-brand transition hover:bg-white/90"
         >
-          <DiscordIcon className="size-5" /> Join Discord
+          <DiscordIcon className="size-5" /> {site.common.joinDiscord}
         </a>
       </div>
     </section>

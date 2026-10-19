@@ -1,22 +1,19 @@
 import type { Metadata } from "next";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { RegisterForm } from "@/components/auth/auth-forms";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "Sign up" };
+const t = site.auth.register;
+
+export const metadata: Metadata = { title: site.meta.pages.register };
 
 export default function RegisterPage() {
   return (
     <AuthLayout
-      title="Create your account"
-      subtitle="Get instant access to your downloads, license keys and Discord roles."
-      switchTo={{ prompt: "Already have an account?", cta: "Log in", href: "/login" }}
-      oauthLabel="Sign up with"
-      side={{
-        title: "Already registered?",
-        text: "Access your account and enjoy the benefits and discounts made for you.",
-        cta: "Login",
-        href: "/login",
-      }}
+      title={t.title}
+      subtitle={t.subtitle}
+      oauthLabel={t.oauthLabel}
+      side={{ ...t.side, href: "/login" }}
     >
       <RegisterForm />
     </AuthLayout>

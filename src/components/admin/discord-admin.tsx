@@ -18,6 +18,10 @@ import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Field, inputCls, Section, Toggle } from "./form-bits";
 import { td, th } from "./ui";
+import { admin } from "@/lang/admin";
+import { site } from "@/lang/site";
+
+const t = admin.discord;
 
 type Config = { guildId: string; enabled: boolean; autoJoin: boolean; removeRoles: boolean };
 type Rule = { id: string; roleId: string; productId: string | null; productName: string | null };
@@ -62,23 +66,23 @@ export function DiscordAdmin({
     <div className="grid gap-6">
       <SetupSection env={env} inviteUrl={inviteUrl} config={config} guild={guild} />
 
-      <Section title="Role rules">
+      <Section title={t.rulesTitle}>
         <p className="-mt-2 text-sm text-white/60">
-          Buyers get every role whose product they own. <b className="text-white/80">Every customer</b> rules apply to anyone who owns at least one product.
+          {t.rulesHint} <b className="text-white/80">{t.rulesHintEvery}</b>{t.rulesHintRest}
         </p>
         {!guild?.ok ? (
           <p className="rounded-lg border border-dashed border-white/15 p-6 text-center text-sm text-white/50">
-            Connect the bot to a server above to pick roles.
+            {t.connectFirst}
           </p>
         ) : (
-          <AddRuleForm roles={roles} products={products} pending={pending} onAdd={(v) => run(() => addDiscordRuleAction(v), "Rule added")} />
+          <AddRuleForm roles={roles} products={products} pending={pending} onAdd={(v) => run(() => addDiscordRuleAction(v), t.ruleAdded)} />
         )}
         <div className="overflow-x-auto rounded-lg border border-white/10">
           <table className="w-full min-w-[520px]">
             <thead className="border-b border-white/5">
               <tr>
-                <th className={th}>WHEN THE USER OWNS</th>
-                <th className={th}>THEY GET</th>
+                <th className={th}>{t.columns.owns}</th>
+                <th className={th}>{t.columns.gets}</th>
                 <th className={th} />
               </tr>
             </thead>
@@ -87,19 +91,19 @@ export function DiscordAdmin({
                 const role = roleById.get(rule.roleId);
                 return (
                   <tr key={rule.id} className="border-b border-white/5 last:border-0">
-                    <td className={td}>{rule.productId ? rule.productName : <span className="font-semibold text-brand-soft">Every customer</span>}</td>
+                    <td className={td}>{rule.productId ? rule.productName : <span className="font-semibold text-brand-soft">{t.everyCustomer}</span>}</td>
                     <td className={td}>
                       {role ? (
                         <RoleChip role={role} />
                       ) : (
-                        <span className="text-xs text-destructive">Deleted role ({rule.roleId})</span>
+                        <span className="text-xs text-destructive">{t.deletedRole(rule.roleId)}</span>
                       )}
                     </td>
                     <td className={`${td} text-right`}>
                       <button
                         type="button"
-                        aria-label="Delete rule"
-                        onClick={() => confirm("Delete this rule? Existing members keep the role until the next sync.") && run(() => deleteDiscordRuleAction(rule.id), "Rule deleted")}
+                        aria-label={t.deleteRule}
+                        onClick={() => confirm(t.deleteRuleConfirm) && run(() => deleteDiscordRuleAction(rule.id), t.ruleDeleted)}
                         className="text-white/50 hover:text-destructive"
                       >
                         <Trash2Icon className="size-4" />
@@ -110,7 +114,7 @@ export function DiscordAdmin({
               })}
               {rules.length === 0 && (
                 <tr>
-                  <td colSpan={3} className={`${td} text-white/50`}>No rules yet.</td>
+                  <td colSpan={3} className={`${td} text-white/50`}>{t.noRules}</td>
                 </tr>
               )}
             </tbody>
@@ -118,10 +122,10 @@ export function DiscordAdmin({
         </div>
       </Section>
 
-      <Section title="Sync">
+      <Section title={t.syncTitle}>
         <div className="flex flex-wrap items-center gap-4">
           <p className="text-sm text-white/70">
-            <b className="text-white">{linked}</b> user{linked === 1 ? " has" : "s have"} linked Discord. Roles sync automatically after each purchase and when someone links Discord.
+            {t.linked(linked)}
           </p>
           <button
             type="button"
@@ -130,28 +134,28 @@ export function DiscordAdmin({
               start(async () => {
                 const result = await syncAllDiscordAction();
                 if (!result.ok) return void toast.error(result.error);
-                toast.success(`Synced ${result.synced} of ${result.total} users`);
+                toast.success(t.synced(result.synced, result.total));
                 router.refresh();
               })
             }
             className="ml-auto inline-flex h-10 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {pending ? <Loader2Icon className="size-4 animate-spin" /> : <RefreshCwIcon className="size-4" />} Sync everyone now
+            {pending ? <Loader2Icon className="size-4 animate-spin" /> : <RefreshCwIcon className="size-4" />} {t.syncAll}
           </button>
         </div>
         <div className="overflow-x-auto rounded-lg border border-white/10">
           <table className="w-full min-w-[620px]">
             <thead className="border-b border-white/5">
               <tr>
-                <th className={th}>TIME</th>
-                <th className={th}>USER</th>
-                <th className={th}>RESULT</th>
+                <th className={th}>{t.columns.time}</th>
+                <th className={th}>{t.columns.user}</th>
+                <th className={th}>{t.columns.result}</th>
               </tr>
             </thead>
             <tbody>
               {log.map((row) => (
                 <tr key={row.id} className="border-b border-white/5 last:border-0">
-                  <td className={`${td} whitespace-nowrap text-white/60`}>{formatDate(row.createdAt)} {new Date(row.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+                  <td className={`${td} whitespace-nowrap text-white/60`}>{formatDate(row.createdAt)} {new Date(row.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</td>
                   <td className={td}>
                     <span className="block">{row.email ?? "—"}</span>
                     {row.discordUsername && <span className="text-xs text-white/50">{row.discordUsername}</span>}
@@ -166,15 +170,15 @@ export function DiscordAdmin({
               ))}
               {log.length === 0 && (
                 <tr>
-                  <td colSpan={3} className={`${td} text-white/50`}>Nothing synced yet.</td>
+                  <td colSpan={3} className={`${td} text-white/50`}>{t.noLog}</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
         {log.length > 0 && (
-          <button type="button" onClick={() => run(clearDiscordLogAction, "Log cleared")} className="justify-self-start text-xs text-white/50 hover:text-white">
-            Clear log
+          <button type="button" onClick={() => run(clearDiscordLogAction, t.logCleared)} className="justify-self-start text-xs text-white/50 hover:text-white">
+            {t.clearLog}
           </button>
         )}
       </Section>
@@ -201,19 +205,19 @@ function SetupSection({
     startSave(async () => {
       const result = await saveDiscordSettingsAction(values);
       if (!result.ok) return void toast.error(result.error);
-      toast.success("Discord settings saved");
+      toast.success(t.saved);
       router.refresh();
     });
 
   return (
-    <Section title="Setup">
+    <Section title={t.setup}>
       <ul className="grid gap-2 text-sm">
-        <Check ok={env.login} label="Discord login" hint="AUTH_DISCORD_ID and AUTH_DISCORD_SECRET in .env.local" />
-        <Check ok={env.bot} label="Bot token" hint="DISCORD_BOT_TOKEN in .env.local (same Discord application)" />
+        <Check ok={env.login} label={t.checks.login} hint={t.checks.loginHint} />
+        <Check ok={env.bot} label={t.checks.bot} hint={t.checks.botHint} />
         <Check
           ok={!!guild?.ok}
-          label={guild?.ok ? `Connected to ${guild.guildName}` : "Bot in your server"}
-          hint={guild && !guild.ok ? guild.error : "Invite the bot, then paste your server ID below"}
+          label={guild?.ok ? t.checks.connected(guild.guildName) : t.checks.inServer}
+          hint={guild && !guild.ok ? guild.error : t.checks.inServerHint}
         />
       </ul>
       {guild?.ok &&
@@ -227,21 +231,21 @@ function SetupSection({
           rel="noreferrer"
           className="inline-flex h-10 items-center gap-2 justify-self-start rounded-md bg-[#5865f2] px-4 text-sm font-semibold text-white hover:bg-[#4752c4]"
         >
-          Invite the bot to your server <ExternalLinkIcon className="size-4" />
+          {t.invite} <ExternalLinkIcon className="size-4" />
         </a>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-4">
-        <Field label="Server ID" hint="Discord: Settings → Advanced → Developer Mode, then right-click your server → Copy Server ID">
+        <Field label={t.serverId} hint={t.serverIdHint}>
           <input {...register("guildId")} placeholder="123456789012345678" inputMode="numeric" className={inputCls} />
         </Field>
         <div className="flex flex-wrap gap-6">
-          <Toggle label="Enable role sync" {...register("enabled")} />
-          <Toggle label="Add buyers to the server automatically" {...register("autoJoin")} />
-          <Toggle label="Remove roles after a refund or disconnect" {...register("removeRoles")} />
+          <Toggle label={t.enable} {...register("enabled")} />
+          <Toggle label={t.autoJoin} {...register("autoJoin")} />
+          <Toggle label={t.removeRoles} {...register("removeRoles")} />
         </div>
         <button type="submit" disabled={saving} className="inline-flex h-10 items-center gap-2 justify-self-start rounded-md bg-brand px-5 text-sm font-semibold text-white disabled:opacity-60">
-          {saving && <Loader2Icon className="size-4 animate-spin" />} Save settings
+          {saving && <Loader2Icon className="size-4 animate-spin" />} {t.save}
         </button>
       </form>
     </Section>
@@ -264,23 +268,23 @@ function AddRuleForm({
 
   return (
     <div className="grid items-end gap-3 rounded-lg border border-brand/30 bg-brand/5 p-4 md:grid-cols-[1fr_1fr_auto]">
-      <Field label="When the user owns">
+      <Field label={t.whenOwns}>
         <select value={productId} onChange={(e) => setProductId(e.target.value)} className={inputCls}>
-          <option value={EVERY_CUSTOMER}>Every customer (any product)</option>
+          <option value={EVERY_CUSTOMER}>{t.everyCustomerOption}</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name} ({p.type})
+              {p.name} ({site.productTypes[p.type as keyof typeof site.productTypes] ?? p.type})
             </option>
           ))}
         </select>
       </Field>
-      <Field label="Give role">
+      <Field label={t.giveRole}>
         <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className={inputCls}>
-          <option value="">Choose a role…</option>
+          <option value="">{t.chooseRole}</option>
           {roles.map((r) => (
             <option key={r.id} value={r.id} disabled={!r.assignable}>
               {r.name}
-              {!r.assignable && " (above the bot's role)"}
+              {!r.assignable && t.aboveBot}
             </option>
           ))}
         </select>
@@ -291,7 +295,7 @@ function AddRuleForm({
         onClick={() => onAdd({ productId: productId === EVERY_CUSTOMER ? null : productId, roleId })}
         className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-4 text-sm font-semibold text-white disabled:opacity-50"
       >
-        <PlusIcon className="size-4" /> Add rule
+        <PlusIcon className="size-4" /> {t.addRule}
       </button>
     </div>
   );

@@ -21,7 +21,16 @@ const createdAt = () => timestamp("created_at", { mode: "date" }).defaultNow().n
 
 // --- Auth.js tables (shape required by @auth/drizzle-adapter) ---
 
-export const userRole = pgEnum("user_role", ["user", "admin"]);
+// Roles are rows so the admin panel can add/rename/delete them. "user" and "admin"
+// are built in (system): renamable, never deletable. Access checks use the key "admin".
+export const roles = pgTable("role", {
+  key: text("key").primaryKey(),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#a1a1aa"),
+  system: boolean("system").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: createdAt(),
+});
 
 export const users = pgTable("user", {
   id: id(),
@@ -31,7 +40,11 @@ export const users = pgTable("user", {
   image: text("image"),
   // Only set for e-mail + password accounts
   passwordHash: text("password_hash"),
-  role: userRole("role").notNull().default("user"),
+  // Deleting a role drops its members back to "user"
+  role: text("role")
+    .notNull()
+    .default("user")
+    .references(() => roles.key, { onDelete: "set default", onUpdate: "cascade" }),
   marketingEmails: boolean("marketing_emails").notNull().default(true),
   // Shown in the dashboard once a Discord account is linked
   discordUsername: text("discord_username"),
@@ -368,6 +381,7 @@ export const discordSyncLog = pgTable(
   (l) => [index("discord_log_created_idx").on(l.createdAt)],
 );
 
+export type Role = typeof roles.$inferSelect;
 export type Product = typeof products.$inferSelect;
 export type DocPage = typeof docPages.$inferSelect;
 export type Faq = typeof faqs.$inferSelect;

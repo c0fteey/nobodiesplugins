@@ -5,8 +5,11 @@ import { getProducts } from "@/lib/data/store";
 import { PluginCarousel } from "@/components/store/header-nav";
 import { ProductsCatalog } from "@/components/store/catalogs";
 import { DiscordCta } from "@/components/store/discord-cta";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "All products" };
+const t = site.productsPage;
+
+export const metadata: Metadata = { title: site.meta.pages.products };
 
 export default async function ProductsPage() {
   const products = await getProducts();
@@ -16,13 +19,10 @@ export default async function ProductsPage() {
     <>
       <section className="container-page pt-10 text-center">
         <h1 className="text-4xl leading-tight font-bold tracking-[-0.03em] sm:text-[56px]">
-          Transform Your Minecraft
-          <br className="hidden sm:block" /> Server Like Never Before
+          {t.titleLine1}
+          <br className="hidden sm:block" /> {t.titleLine2}
         </h1>
-        <p className="mx-auto mt-5 max-w-2xl text-white/70">
-          Discover plugins, models & builds that make running your server easier, more fun, and totally unique. Built
-          for Minecraft servers who want their servers to stand out.
-        </p>
+        <p className="mx-auto mt-5 max-w-2xl text-white/70">{t.lead}</p>
         <PluginCarousel plugins={plugins} className="mt-12 text-left" />
       </section>
 

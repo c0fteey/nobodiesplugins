@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Announcement } from "@/db/schema";
 import { cn } from "@/lib/utils";
+import { site } from "@/lang/site";
 
 const INTERVAL_MS = 5000;
 
@@ -61,7 +62,7 @@ export function AnnouncementCarousel({ announcements }: { announcements: Announc
             <button
               key={i}
               type="button"
-              aria-label={`Show announcement ${i + 1}`}
+              aria-label={site.nav.showAnnouncement(i + 1)}
               onClick={() => setIndex(i)}
               className={cn("h-1 rounded-full transition-all", i === index % count ? "w-5 bg-white" : "w-1.5 bg-white/40")}
             />

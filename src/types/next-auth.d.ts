@@ -1,6 +1,7 @@
 import type { DefaultSession } from "next-auth";
 
-type Role = "user" | "admin";
+// Role keys live in the "role" table ("user", "admin", "customer", …)
+type Role = string;
 
 declare module "next-auth" {
   interface Session {

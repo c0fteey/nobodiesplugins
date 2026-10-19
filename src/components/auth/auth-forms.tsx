@@ -10,12 +10,16 @@ import { CheckIcon, CircleAlertIcon, EyeIcon, EyeOffIcon, Loader2Icon, LockIcon,
 import { toast } from "sonner";
 import { signInAction, signUpAction } from "@/actions/auth";
 import { cn } from "@/lib/utils";
+import { site } from "@/lang/site";
 import {
   signInSchema,
   signUpSchema,
   type SignInInput,
   type SignUpInput,
 } from "@/lib/validations/auth";
+
+const t = site.auth;
+const f = t.fields;
 
 const inputClass =
   "peer h-12 w-full rounded-lg border border-white/10 bg-white/[0.03] pr-11 pl-10 text-[15px] outline-none transition placeholder:text-white/30 hover:border-white/20 focus:border-brand focus:bg-white/[0.05] focus:ring-4 focus:ring-brand/15 aria-invalid:border-destructive/70 aria-invalid:ring-destructive/10";
@@ -80,7 +84,7 @@ function TextField({
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? "Hide password" : "Show password"}
+            aria-label={visible ? f.hidePassword : f.showPassword}
             className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-white/40 transition hover:text-white"
           >
             {visible ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
@@ -107,12 +111,7 @@ function SubmitButton({ pending, children }: { pending: boolean; children: React
 }
 
 // Auth.js sends OAuth failures back here as ?error=<code>
-const OAUTH_ERRORS: Record<string, string> = {
-  OAuthAccountNotLinked:
-    "An account with this email already exists. Log in with your email and password, then connect Discord in Settings.",
-  DiscordNoEmail: "Your Discord account has no verified email. Add one in Discord, then try again.",
-  AccessDenied: "Sign-in was cancelled.",
-};
+const OAUTH_ERRORS: Record<string, string> = t.oauthErrors;
 
 export function LoginForm() {
   const params = useSearchParams();
@@ -146,47 +145,47 @@ export function LoginForm() {
       {oauthError && (
         <p role="alert" className="mb-5 flex gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-3 text-sm text-white/90">
           <CircleAlertIcon className="mt-0.5 size-4 shrink-0 text-destructive" />
-          {OAUTH_ERRORS[oauthError] ?? "Sign-in failed. Please try again."}
+          {OAUTH_ERRORS[oauthError] ?? t.oauthErrors.fallback}
         </p>
       )}
       <div className="space-y-4">
         <TextField
           id="email"
-          label="Email"
+          label={f.email}
           icon={MailIcon}
           autoComplete="email"
-          placeholder="you@example.com"
+          placeholder={f.emailPlaceholder}
           error={errors.email}
           registration={register("email")}
         />
         <TextField
           id="password"
-          label="Password"
+          label={f.password}
           icon={LockIcon}
           password
           autoComplete="current-password"
-          placeholder="Your password"
+          placeholder={f.passwordPlaceholder}
           error={errors.password}
           registration={register("password")}
           aside={
             <Link href="/help" className="text-xs text-white/50 transition hover:text-brand-soft">
-              Forgot password?
+              {t.login.forgot}
             </Link>
           }
         />
       </div>
       <label className="mt-4 flex w-fit cursor-pointer items-center gap-2.5 text-sm text-white/70 select-none">
-        <input type="checkbox" {...register("remember")} /> Remember me
+        <input type="checkbox" {...register("remember")} /> {t.login.remember}
       </label>
-      <SubmitButton pending={pending}>Log in</SubmitButton>
+      <SubmitButton pending={pending}>{t.login.submit}</SubmitButton>
     </form>
   );
 }
 
 const PASSWORD_RULES = [
-  { label: "8+ characters", test: (v: string) => v.length >= 8 },
-  { label: "A letter", test: (v: string) => /[a-zA-Z]/.test(v) },
-  { label: "A number", test: (v: string) => /[0-9]/.test(v) },
+  { label: site.auth.passwordRules.length, test: (v: string) => v.length >= 8 },
+  { label: site.auth.passwordRules.letter, test: (v: string) => /[a-zA-Z]/.test(v) },
+  { label: site.auth.passwordRules.number, test: (v: string) => /[0-9]/.test(v) },
 ];
 
 export function RegisterForm() {
@@ -213,21 +212,21 @@ export function RegisterForm() {
       <div className="space-y-4">
         <TextField
           id="email"
-          label="Email"
+          label={f.email}
           icon={MailIcon}
           autoComplete="email"
-          placeholder="you@example.com"
+          placeholder={f.emailPlaceholder}
           error={errors.email}
           registration={register("email")}
         />
         <div>
           <TextField
             id="password"
-            label="Password"
+            label={f.password}
             icon={LockIcon}
             password
             autoComplete="new-password"
-            placeholder="Create a password"
+            placeholder={f.newPasswordPlaceholder}
             error={errors.password}
             registration={register("password")}
           />
@@ -246,11 +245,11 @@ export function RegisterForm() {
         </div>
         <TextField
           id="confirmPassword"
-          label="Confirm password"
+          label={f.confirmPassword}
           icon={LockIcon}
           password
           autoComplete="new-password"
-          placeholder="Repeat your password"
+          placeholder={f.confirmPlaceholder}
           error={errors.confirmPassword}
           registration={register("confirmPassword")}
         />
@@ -258,14 +257,14 @@ export function RegisterForm() {
       <label className="mt-5 flex cursor-pointer items-start gap-2.5 text-sm text-white/70 select-none">
         <input type="checkbox" {...register("acceptTerms")} className="mt-0.5" />
         <span>
-          I read and accept the{" "}
+          {t.register.acceptBefore}
           <Link href="/help#terms" className="font-medium text-brand-soft hover:underline">
-            Terms & Conditions
+            {t.register.acceptLink}
           </Link>
         </span>
       </label>
       <ErrorText error={errors.acceptTerms as FieldError | undefined} />
-      <SubmitButton pending={pending}>Create account</SubmitButton>
+      <SubmitButton pending={pending}>{t.register.submit}</SubmitButton>
     </form>
   );
 }

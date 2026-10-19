@@ -12,6 +12,9 @@ import { DEFAULT_NAV_ITEMS } from "@/lib/site-defaults";
 import { cn } from "@/lib/utils";
 import { ProductArt } from "./product-art";
 import { useCart } from "./cart-provider";
+import { site } from "@/lang/site";
+
+const t = site.nav;
 
 export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }: { plugins: Product[]; discordUrl: string; navItems?: NavItem[] }) {
   const pathname = usePathname();
@@ -43,11 +46,11 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-background/80 backdrop-blur-xl" onMouseLeave={scheduleClose}>
       <div className="container-page flex h-[68px] items-center gap-6">
-        <Link href="/" aria-label="NOBODIES home" className="shrink-0">
+        <Link href="/" aria-label={t.homeLabel} className="shrink-0">
           <Wordmark className="text-[26px]" />
         </Link>
 
-        <nav className="mx-auto hidden items-center gap-8 lg:flex" aria-label="Main">
+        <nav className="mx-auto hidden items-center gap-8 lg:flex" aria-label={t.mainLabel}>
           {productsItem && (
             <button
               type="button"
@@ -88,10 +91,10 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
           >
             <DiscordIcon className="size-6" /> <span className="hidden md:inline">Discord</span>
           </a>
-          <Link href="/dashboard" aria-label="My account" className="text-white/85 transition hover:text-white">
+          <Link href="/dashboard" aria-label={t.myAccount} className="text-white/85 transition hover:text-white">
             <UserIcon className="size-6" strokeWidth={1.6} />
           </Link>
-          <button type="button" onClick={open} aria-label="Open cart" className="relative text-white/85 transition hover:text-white">
+          <button type="button" onClick={open} aria-label={t.openCart} className="relative text-white/85 transition hover:text-white">
             <ShoppingCartIcon className="size-6" strokeWidth={1.6} />
             <AnimatePresence>
               {items.length > 0 && (
@@ -110,7 +113,7 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
           <button
             type="button"
             className="text-white/85 lg:hidden"
-            aria-label="Open menu"
+            aria-label={t.openMenu}
             onClick={() => setMobileOpen(true)}
           >
             <MenuIcon className="size-7" />
@@ -132,10 +135,10 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
             <div className="container-page flex gap-14 pt-8">
               <div className="flex w-40 shrink-0 flex-col gap-5">
                 <Link href="/products" className="text-2xl font-medium transition hover:text-brand-soft">
-                  All Products
+                  {t.allProducts}
                 </Link>
                 <Link href="/addons" className="text-2xl font-medium transition hover:text-brand-soft">
-                  Addons
+                  {t.addons}
                 </Link>
               </div>
               <PluginCarousel plugins={plugins} />
@@ -155,12 +158,12 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
           >
             <div className="container-page flex h-[68px] items-center justify-between">
               <Wordmark className="text-2xl" />
-              <button type="button" aria-label="Close menu" onClick={() => setMobileOpen(false)}>
+              <button type="button" aria-label={t.closeMenu} onClick={() => setMobileOpen(false)}>
                 <XIcon className="size-7" />
               </button>
             </div>
             <nav className="container-page flex flex-col gap-1 pt-4">
-              {[...visibleItems, { href: "/dashboard", label: "My account", visible: true }].map((item, i) => (
+              {[...visibleItems, { href: "/dashboard", label: t.myAccount, visible: true }].map((item, i) => (
                 <motion.div key={item.href} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.04 * i }}>
                   <Link href={item.href} className="block border-b border-white/5 py-4 text-2xl font-semibold">
                     {item.label}
@@ -168,7 +171,7 @@ export function HeaderNav({ plugins, discordUrl, navItems = DEFAULT_NAV_ITEMS }:
                 </motion.div>
               ))}
               <a href={discordUrl} target="_blank" rel="noreferrer" className="mt-6 flex items-center gap-2 text-lg text-brand-soft">
-                <DiscordIcon className="size-6" /> Join our Discord
+                <DiscordIcon className="size-6" /> {t.joinOurDiscord}
               </a>
             </nav>
           </motion.div>
@@ -201,7 +204,7 @@ export function PluginCarousel({ plugins, className }: { plugins: Product[]; cla
         <button
           type="button"
           onClick={scroll}
-          aria-label="Scroll plugins"
+          aria-label={t.scrollPlugins}
           className="absolute top-1/2 -right-3 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-black/80 text-white shadow-lg"
         >
           <ChevronRightIcon className="size-5" />

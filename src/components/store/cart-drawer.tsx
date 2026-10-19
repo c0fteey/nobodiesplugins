@@ -10,6 +10,9 @@ import { checkoutAction, previewCartAction, type CartPreview } from "@/actions/s
 import { formatPrice, formatPriceCompact } from "@/lib/format";
 import { ProductArt } from "./product-art";
 import { useCart } from "./cart-provider";
+import { site } from "@/lang/site";
+
+const t = site.cart;
 
 export function CartDrawer() {
   const { items, catalog, isOpen, close, remove, add, clear, couponCode, setCouponCode } = useCart();
@@ -73,7 +76,7 @@ export function CartDrawer() {
       clear();
       close();
       const count = result.purchased + result.gifted;
-      toast.success(`Purchase complete — ${count} item${count > 1 ? "s" : ""} added to your library${result.gifted ? " (incl. free gifts)" : ""}`);
+      toast.success(t.purchased(count, result.gifted > 0));
       router.push("/dashboard/purchases");
     });
   }
@@ -81,7 +84,7 @@ export function CartDrawer() {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="My cart">
+        <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label={t.label}>
           <motion.div
             className="absolute inset-0 bg-black/70 backdrop-blur-md"
             initial={{ opacity: 0 }}
@@ -98,12 +101,10 @@ export function CartDrawer() {
           >
             <header className="flex items-center justify-between border-b border-white/5 bg-[#202022] px-6 py-6 sm:px-10">
               <h2 className="text-2xl font-semibold">
-                My Cart{" "}
-                <span className="text-sm font-medium">
-                  ({items.length} {items.length === 1 ? "item" : "items"})
-                </span>
+                {t.title}{" "}
+                <span className="text-sm font-medium">{t.count(items.length)}</span>
               </h2>
-              <button type="button" onClick={close} aria-label="Close cart" className="rounded-md p-1 transition hover:bg-white/10">
+              <button type="button" onClick={close} aria-label={t.close} className="rounded-md p-1 transition hover:bg-white/10">
                 <XIcon className="size-7" strokeWidth={1.5} />
               </button>
             </header>
@@ -117,8 +118,8 @@ export function CartDrawer() {
                 >
                   <Image src="/images/spider.png" alt="" width={300} height={225} className="h-auto w-[300px] [image-rendering:pixelated]" />
                 </motion.div>
-                <p className="mt-6 max-w-xs text-xl leading-tight font-bold">Oops... looks like the spiders padded through here</p>
-                <p className="mt-3 max-w-xs text-sm">Add products to your cart and remove them from here</p>
+                <p className="mt-6 max-w-xs text-xl leading-tight font-bold">{t.emptyTitle}</p>
+                <p className="mt-3 max-w-xs text-sm">{t.emptyText}</p>
                 <button
                   type="button"
                   onClick={() => {
@@ -127,7 +128,7 @@ export function CartDrawer() {
                   }}
                   className="mt-6 inline-flex items-center gap-3 text-base font-medium transition hover:text-brand-soft"
                 >
-                  Lets buy <ExternalLinkIcon className="size-5 text-brand-soft" />
+                  {t.letsBuy} <ExternalLinkIcon className="size-5 text-brand-soft" />
                 </button>
               </div>
             ) : (
@@ -152,12 +153,12 @@ export function CartDrawer() {
                               onClick={() => remove(p.id)}
                               className="mt-1 inline-flex items-center gap-1.5 text-sm text-sale transition hover:opacity-80"
                             >
-                              <Trash2Icon className="size-4" /> Remove
+                              <Trash2Icon className="size-4" /> {site.common.remove}
                             </button>
                           </div>
                           <div className="text-right text-lg font-semibold">
                             {giftIds.has(p.id) ? (
-                              <span className="text-success">FREE</span>
+                              <span className="text-success">{site.common.freeUpper}</span>
                             ) : p.compareAtCents && (
                               <span className="mr-2 text-base font-normal text-sale line-through">
                                 {formatPrice(p.compareAtCents)}
@@ -185,11 +186,11 @@ export function CartDrawer() {
                           <GiftIcon className="size-6 shrink-0 text-success" />
                           <div className="flex-1">
                             <p className="font-semibold">{g.name}</p>
-                            <p className="text-xs text-white/70">{g.campaignLabel} · included free with your order</p>
+                            <p className="text-xs text-white/70">{t.giftIncluded(g.campaignLabel)}</p>
                           </div>
                           <div className="text-right">
                             <span className="block text-xs text-white/50 line-through">{formatPrice(g.worthCents)}</span>
-                            <span className="font-bold text-success">FREE</span>
+                            <span className="font-bold text-success">{site.common.freeUpper}</span>
                           </div>
                         </motion.div>
                       ))}
@@ -197,7 +198,7 @@ export function CartDrawer() {
 
                   {suggestions.length > 0 && (
                     <section className="mt-10">
-                      <h3 className="text-xl font-medium">For you</h3>
+                      <h3 className="text-xl font-medium">{t.forYou}</h3>
                       <div className="scrollbar-none mt-4 -mr-6 flex gap-6 overflow-x-auto pr-6 pb-2 sm:-mr-10">
                         {suggestions.map((p) => (
                           <div key={p.id} className="w-[170px] shrink-0">
@@ -221,7 +222,7 @@ export function CartDrawer() {
                               onClick={() => add(p.id)}
                               className="mt-4 h-12 w-full rounded-full bg-brand text-base font-medium text-white transition hover:bg-brand/85"
                             >
-                              Quick Add
+                              {t.quickAdd}
                             </button>
                           </div>
                         ))}
@@ -241,7 +242,7 @@ export function CartDrawer() {
                           {fresh?.couponError && <span className="text-sale">{fresh.couponError}</span>}
                         </span>
                         <button type="button" onClick={() => setCouponCode("")} className="text-xs text-white/60 hover:text-white">
-                          Remove
+                          {site.common.remove}
                         </button>
                       </div>
                     ) : (
@@ -256,30 +257,30 @@ export function CartDrawer() {
                         <input
                           value={couponDraft}
                           onChange={(e) => setCouponDraft(e.target.value)}
-                          placeholder="Coupon or creator code"
-                          aria-label="Coupon code"
+                          placeholder={t.couponPlaceholder}
+                          aria-label={t.couponLabel}
                           className="h-11 flex-1 rounded-full border border-white/15 bg-transparent px-5 text-sm uppercase outline-none placeholder:normal-case placeholder:text-white/40 focus:border-brand"
                         />
                         <button type="submit" className="h-11 rounded-full bg-white/10 px-5 text-sm font-semibold transition hover:bg-white/15">
-                          Apply
+                          {site.common.apply}
                         </button>
                       </form>
                     )}
                   </div>
                   {savings > 0 && (
                     <div className="flex justify-between text-lg font-semibold">
-                      <span>Season Savings</span>
+                      <span>{t.seasonSavings}</span>
                       <span className="text-success">{formatPriceCompact(savings)}</span>
                     </div>
                   )}
                   {fresh && fresh.couponDiscountCents > 0 && (
                     <div className="mt-3 flex justify-between text-lg font-semibold">
-                      <span>Coupon ({fresh.coupon?.code})</span>
+                      <span>{t.coupon(fresh.coupon?.code ?? "")}</span>
                       <span className="text-success">−{formatPriceCompact(fresh.couponDiscountCents)}</span>
                     </div>
                   )}
                   <div className="mt-4 flex justify-between text-lg font-semibold">
-                    <span>Sub Total</span>
+                    <span>{t.subtotal}</span>
                     <span>{formatPriceCompact(total)}</span>
                   </div>
                   <div className="mt-6 grid grid-cols-2 gap-4">
@@ -288,7 +289,7 @@ export function CartDrawer() {
                       onClick={close}
                       className="h-14 rounded-full border border-brand text-lg font-medium text-brand-soft transition hover:bg-brand/10"
                     >
-                      Resume shopping
+                      {t.resume}
                     </button>
                     <button
                       type="button"
@@ -297,7 +298,7 @@ export function CartDrawer() {
                       className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand text-lg font-medium text-white transition hover:bg-brand/85 disabled:opacity-60"
                     >
                       {pending && <Loader2Icon className="size-5 animate-spin" />}
-                      Quick Checkout
+                      {t.checkout}
                     </button>
                   </div>
                 </footer>
@@ -310,7 +311,7 @@ export function CartDrawer() {
   );
 }
 
-export function SaleRibbon({ label = "Sale" }: { label?: string }) {
+export function SaleRibbon({ label = site.common.sale }: { label?: string }) {
   return (
     <span className="absolute top-0 left-2 flex h-16 w-6 items-center justify-center rounded-b-sm bg-sale text-[11px] font-semibold text-white shadow">
       <span className="-rotate-90 whitespace-nowrap">{label}</span>

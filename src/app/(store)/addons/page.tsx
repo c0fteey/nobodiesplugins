@@ -5,8 +5,11 @@ import { ProductGridSkeleton } from "@/components/store/product-grid-skeleton";
 import { getProducts } from "@/lib/data/store";
 import { AddonsCatalog } from "@/components/store/catalogs";
 import { DiscordCta } from "@/components/store/discord-cta";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "Add-ons" };
+const t = site.addonsPage;
+
+export const metadata: Metadata = { title: site.meta.pages.addons };
 
 export default async function AddonsPage() {
   const products = await getProducts();
@@ -19,16 +22,13 @@ export default async function AddonsPage() {
   return (
     <>
       <section className="container-page pt-12 pb-16 text-center">
-        <h1 className="text-4xl font-bold tracking-[-0.03em] sm:text-5xl">Add-ons for your plugins</h1>
-        <p className="mx-auto mt-5 max-w-xl text-white/70">
-          Everything that complements our plugins: animation packs, expansions, and more. Pick a plugin to see its
-          add-ons.
-        </p>
+        <h1 className="text-4xl font-bold tracking-[-0.03em] sm:text-5xl">{t.title}</h1>
+        <p className="mx-auto mt-5 max-w-xl text-white/70">{t.lead}</p>
       </section>
 
       <section className="bg-[#181818] py-12">
         <div className="container-page">
-          <p className="mb-5 text-sm font-semibold tracking-[0.12em] text-white/80">BROWSE BY PLUGIN</p>
+          <p className="mb-5 text-sm font-semibold tracking-[0.12em] text-white/80">{t.browseByPlugin}</p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {withAddons.map(({ plugin, count }) => (
               <Link
@@ -41,9 +41,7 @@ export default async function AddonsPage() {
                 <span aria-hidden className="absolute -right-4 -bottom-6 size-28 rotate-12 rounded-md bg-black/20 transition duration-500 group-hover:rotate-[24deg] group-hover:scale-110" />
                 <span className="relative">
                   <span className="block text-2xl font-bold">{plugin.name.replace(/^NOBODIES\s+/i, "")}</span>
-                  <span className="text-xs font-semibold text-white/80">
-                    {count} ADD-ON{count > 1 ? "S" : ""}
-                  </span>
+                  <span className="text-xs font-semibold text-white/80">{t.count(count)}</span>
                 </span>
               </Link>
             ))}

@@ -3,58 +3,41 @@ import { LockIcon, MailIcon, MessageCircleIcon, TrophyIcon } from "lucide-react"
 import { DiscordIcon, InstagramIcon, YoutubeIcon } from "@/components/brand/icons";
 import { getPartners, getProducts, getSettings } from "@/lib/data/store";
 import { OutlineMark } from "@/components/store/outline-mark";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "About us" };
+const t = site.about;
+
+export const metadata: Metadata = { title: site.meta.pages.about };
 
 const FEATURES = [
-  {
-    icon: TrophyIcon,
-    title: "Quality Products",
-    text: "Experience top-quality with our Minecraft plugins, builds, and models, all rigorously tested to enhance gameplay and functionality without compromising performance.",
-  },
-  {
-    icon: MessageCircleIcon,
-    title: "Stellar support",
-    text: "Our dedicated support team is always ready to help, whether you need assistance with plugin installation or server optimization, we're here to help every step of the way.",
-  },
-  {
-    icon: LockIcon,
-    title: "Exclusive Content",
-    text: "Discover unique Minecraft content only available at NOBODIES, from epic builds to specialized plugins and amazing models that make your server stand out.",
-  },
+  { icon: TrophyIcon, ...t.features.quality },
+  { icon: MessageCircleIcon, ...t.features.support },
+  { icon: LockIcon, ...t.features.exclusive },
 ];
 
 export default async function AboutPage() {
   const [settings, products, partners] = await Promise.all([getSettings(), getProducts(), getPartners()]);
   const players = partners.reduce((sum, p) => sum + p.playersAvg, 0);
   const stats = [
-    { value: products.filter((p) => p.type === "plugin").length, label: "Plugins" },
-    { value: products.filter((p) => p.type !== "plugin").length, label: "Add-ons, models & builds" },
-    { value: partners.length, label: "Partner servers" },
-    { value: players.toLocaleString("en-US"), label: "Players on partner servers" },
+    { value: products.filter((p) => p.type === "plugin").length, label: t.stats.plugins },
+    { value: products.filter((p) => p.type !== "plugin").length, label: t.stats.others },
+    { value: partners.length, label: t.stats.partners },
+    { value: players.toLocaleString("tr-TR"), label: t.stats.players },
   ];
 
   return (
     <>
       <section className="container-page grid items-center gap-10 py-16 lg:grid-cols-2">
         <div>
-          <p className="text-sm font-bold">About Us</p>
+          <p className="text-sm font-bold">{t.eyebrow}</p>
           <h1 className="mt-3 text-4xl leading-[1.05] font-bold tracking-[-0.03em] sm:text-5xl">
-            At NOBODIES, Your
-            <br /> Priorities are Ours
+            {t.titleLine1}
+            <br /> {t.titleLine2}
           </h1>
-          <p className="mt-10 max-w-md text-lg leading-relaxed font-bold">
-            At NOBODIES, we specialize in enhancing your Minecraft gameplay through an extensive selection of premium
-            plugins, custom builds, and exclusive models. We are dedicated to offering the best Minecraft enhancements
-            that help server owners and players create unforgettable gaming experiences.
-          </p>
-          <p className="mt-6 max-w-md text-sm leading-relaxed text-white/85">
-            Our mission is to provide the Minecraft community with innovative and reliable products that transform your
-            server. We offer a range of solutions from aesthetic modifications to functional plugins that ensure you can
-            fully personalize and optimize your Minecraft server.
-          </p>
+          <p className="mt-10 max-w-md text-lg leading-relaxed font-bold">{t.lead}</p>
+          <p className="mt-6 max-w-md text-sm leading-relaxed text-white/85">{t.mission}</p>
           <p className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <MailIcon className="size-4" /> For customer service
+            <MailIcon className="size-4" /> {t.customerService}
             <a href={`mailto:${settings.supportEmail}`} className="text-white/70 hover:text-white">
               {settings.supportEmail}
             </a>
@@ -66,7 +49,7 @@ export default async function AboutPage() {
               rel="noreferrer"
               className="inline-flex h-12 items-center gap-2 rounded-full bg-brand px-12 font-semibold text-white transition hover:bg-brand/85"
             >
-              <DiscordIcon className="size-5" /> Join Discord
+              <DiscordIcon className="size-5" /> {site.common.joinDiscord}
             </a>
             <a href="https://youtube.com" target="_blank" rel="noreferrer" aria-label="YouTube" className="text-brand-soft">
               <YoutubeIcon className="size-7" />
@@ -80,7 +63,7 @@ export default async function AboutPage() {
       </section>
 
       <section className="container-page py-16">
-        <h2 className="text-4xl font-bold tracking-tight">What makes us different</h2>
+        <h2 className="text-4xl font-bold tracking-tight">{t.differentTitle}</h2>
         <div className="mt-14 grid gap-10 md:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, text }) => (
             <div key={title}>
@@ -95,7 +78,7 @@ export default async function AboutPage() {
       </section>
 
       <section className="mt-10 bg-[#212b2a] py-24 text-center">
-        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Trusted by server owners</h2>
+        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">{t.trustedTitle}</h2>
         <div className="container-page mt-12 grid grid-cols-2 gap-8 md:grid-cols-4">
           {stats.map((s) => (
             <div key={s.label}>
@@ -110,7 +93,7 @@ export default async function AboutPage() {
           rel="noreferrer"
           className="mt-12 inline-flex h-10 items-center rounded-full bg-[#14a06f] px-10 font-semibold text-white transition hover:bg-[#14a06f]/85"
         >
-          Meet the community
+          {t.meetCommunity}
         </a>
       </section>
     </>

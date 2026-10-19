@@ -17,6 +17,9 @@ import {
   type ProfileInput,
 } from "@/lib/validations/auth";
 import { UserAvatar } from "./user-avatar";
+import { site } from "@/lang/site";
+
+const t = site.settings;
 
 const label = "mb-3 block text-[11px] font-bold tracking-[0.18em] text-white/60";
 const input =
@@ -44,18 +47,18 @@ function AvatarPicker({ name, image: initial }: { name: string; image: string | 
       <UserAvatar name={name} image={image} className="size-24 rounded-md border-0 text-2xl" />
       <ImageUploadButton
         kind="avatar"
-        label="Upload photo"
+        label={t.uploadPhoto}
         className="h-8 px-2.5 text-xs"
-        onUploaded={async (url) => apply(await saveAvatarAction(url), "Profile photo updated")}
+        onUploaded={async (url) => apply(await saveAvatarAction(url), t.photoUpdated)}
       />
       {image ? (
         <button
           type="button"
           disabled={removing}
-          onClick={() => startRemove(async () => apply(await removeAvatarAction(), "Profile photo removed"))}
+          onClick={() => startRemove(async () => apply(await removeAvatarAction(), t.photoRemoved))}
           className="text-[11px] text-white/50 hover:text-destructive"
         >
-          Remove photo
+          {t.removePhoto}
         </button>
       ) : (
         <span className="text-[11px] text-white/50">{uploadHint("avatar")}</span>
@@ -82,19 +85,19 @@ export function ProfileForm({ name, email, image }: { name: string; email: strin
       <div className="flex-1">
         <div className="grid gap-5 md:grid-cols-2">
           <div>
-            <label htmlFor="name" className={label}>FULL NAME</label>
+            <label htmlFor="name" className={label}>{t.fullName}</label>
             <input id="name" {...register("name")} aria-invalid={!!errors.name} className={input} />
             {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
           </div>
           <div>
-            <label htmlFor="email" className={label}>EMAIL ADDRESS</label>
+            <label htmlFor="email" className={label}>{t.emailAddress}</label>
             <input id="email" type="email" {...register("email")} aria-invalid={!!errors.email} className={input} />
             {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
           </div>
         </div>
         <div className="mt-5 flex justify-end">
           <button type="submit" disabled={pending} className={primary}>
-            {pending && <Loader2Icon className="size-4 animate-spin" />} Save Changes
+            {pending && <Loader2Icon className="size-4 animate-spin" />} {t.saveChanges}
           </button>
         </div>
       </div>
@@ -120,23 +123,23 @@ export function PasswordForm() {
         }),
       )}
     >
-      <label htmlFor="currentPassword" className={label}>CURRENT PASSWORD</label>
+      <label htmlFor="currentPassword" className={label}>{t.currentPassword}</label>
       <input id="currentPassword" type="password" autoComplete="current-password" {...register("currentPassword")} aria-invalid={!!errors.currentPassword} className={`${input} md:w-[60%]`} />
       {errors.currentPassword && <p className="mt-1 text-xs text-destructive">{errors.currentPassword.message}</p>}
       <div className="mt-6 grid gap-5 md:grid-cols-2">
         <div>
-          <label htmlFor="newPassword" className={label}>NEW PASSWORD</label>
-          <input id="newPassword" type="password" autoComplete="new-password" placeholder="Enter new password" {...register("newPassword")} aria-invalid={!!errors.newPassword} className={input} />
+          <label htmlFor="newPassword" className={label}>{t.newPassword}</label>
+          <input id="newPassword" type="password" autoComplete="new-password" placeholder={t.newPasswordPlaceholder} {...register("newPassword")} aria-invalid={!!errors.newPassword} className={input} />
           {errors.newPassword && <p className="mt-1 text-xs text-destructive">{errors.newPassword.message}</p>}
         </div>
         <div>
-          <label htmlFor="confirmPassword" className={label}>CONFIRM NEW PASSWORD</label>
-          <input id="confirmPassword" type="password" autoComplete="new-password" placeholder="Repeat new password" {...register("confirmPassword")} aria-invalid={!!errors.confirmPassword} className={input} />
+          <label htmlFor="confirmPassword" className={label}>{t.confirmNewPassword}</label>
+          <input id="confirmPassword" type="password" autoComplete="new-password" placeholder={t.confirmPlaceholder} {...register("confirmPassword")} aria-invalid={!!errors.confirmPassword} className={input} />
           {errors.confirmPassword && <p className="mt-1 text-xs text-destructive">{errors.confirmPassword.message}</p>}
         </div>
       </div>
       <button type="submit" disabled={pending} className={`${primary} mt-6`}>
-        {pending ? <Loader2Icon className="size-4 animate-spin" /> : null} Update Password <LockIcon className="size-4" />
+        {pending ? <Loader2Icon className="size-4 animate-spin" /> : null} {t.updatePassword} <LockIcon className="size-4" />
       </button>
     </form>
   );
@@ -148,19 +151,18 @@ export function PreferencesForm({ marketingEmails }: { marketingEmails: boolean 
 
   return (
     <div>
-      <h2 className="text-[11px] font-bold tracking-[0.18em] text-white/60">EMAIL PREFERENCES</h2>
+      <h2 className="text-[11px] font-bold tracking-[0.18em] text-white/60">{t.emailPrefs}</h2>
       <div className="mt-8 flex items-start justify-between gap-6 rounded-xl border border-white/5 bg-[#141414] p-5">
         <div>
-          <p className="font-bold">Marketing and follow-up emails</p>
+          <p className="font-bold">{t.marketing}</p>
           <p className="mt-1 text-sm text-white/60">
-            Receive product follow-ups, review requests, offers, and similar store communications. New accounts are
-            subscribed by default.
+            {t.marketingText}
           </p>
         </div>
         <Switch
           checked={enabled}
           onCheckedChange={(v) => setEnabled(v)}
-          aria-label="Marketing and follow-up emails"
+          aria-label={t.marketing}
           className="data-checked:bg-brand"
         />
       </div>
@@ -170,7 +172,7 @@ export function PreferencesForm({ marketingEmails }: { marketingEmails: boolean 
         onClick={() => startTransition(async () => toastResult(await updatePreferencesAction({ marketingEmails: enabled })))}
         className={`${primary} mt-6`}
       >
-        {pending && <Loader2Icon className="size-4 animate-spin" />} Save Preferences
+        {pending && <Loader2Icon className="size-4 animate-spin" />} {t.savePrefs}
       </button>
     </div>
   );

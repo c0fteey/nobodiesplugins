@@ -3,6 +3,9 @@ import { Wordmark } from "@/components/brand/logo";
 import { DiscordIcon, InstagramIcon, TwitterIcon } from "@/components/brand/icons";
 import { getSettings } from "@/lib/data/store";
 import { CopyrightYear } from "./copyright-year";
+import { site } from "@/lang/site";
+
+const t = site.footer;
 
 export async function SiteFooter() {
   const { discordUrl, footer } = await getSettings();
@@ -14,7 +17,7 @@ export async function SiteFooter() {
         <div className="flex flex-col gap-10 sm:flex-row sm:items-start sm:justify-between">
           {/* Brand */}
           <div className="shrink-0">
-            <Link href="/" aria-label="NOBODIES home" className="inline-block">
+            <Link href="/" aria-label={site.nav.homeLabel} className="inline-block">
               <Wordmark className="text-[28px] [--logo-cut:#111]" />
             </Link>
             {tagline && (
@@ -44,21 +47,21 @@ export async function SiteFooter() {
           </div>
 
           {/* Links grid */}
-          <nav className="grid grid-cols-2 gap-x-16 gap-y-3 text-sm" aria-label="Footer">
-            <Link href="/products" className="text-white/60 transition hover:text-white">Products</Link>
-            <Link href="/help#terms" className="text-white/60 transition hover:text-white">Terms</Link>
-            <Link href="/addons" className="text-white/60 transition hover:text-white">Addons</Link>
-            <Link href="/help#privacy" className="text-white/60 transition hover:text-white">Privacy</Link>
-            <Link href="/docs" className="text-white/60 transition hover:text-white">Docs</Link>
-            <Link href="/help" className="text-white/60 transition hover:text-white">Support</Link>
-            <Link href="/about" className="text-white/60 transition hover:text-white">About</Link>
+          <nav className="grid grid-cols-2 gap-x-16 gap-y-3 text-sm" aria-label={t.label}>
+            <Link href="/products" className="text-white/60 transition hover:text-white">{t.products}</Link>
+            <Link href="/help#terms" className="text-white/60 transition hover:text-white">{t.terms}</Link>
+            <Link href="/addons" className="text-white/60 transition hover:text-white">{t.addons}</Link>
+            <Link href="/help#privacy" className="text-white/60 transition hover:text-white">{t.privacy}</Link>
+            <Link href="/docs" className="text-white/60 transition hover:text-white">{t.docs}</Link>
+            <Link href="/help" className="text-white/60 transition hover:text-white">{t.support}</Link>
+            <Link href="/about" className="text-white/60 transition hover:text-white">{t.about}</Link>
           </nav>
         </div>
 
         {/* Bottom bar */}
         <div className="mt-10 flex flex-col items-start justify-between gap-2 border-t border-white/[0.06] pt-6 text-xs text-white/30 sm:flex-row">
-          <span>Copyright © <CopyrightYear /> NOBODIES — All rights reserved</span>
-          <span>Not affiliated with Minecraft or Mojang AB</span>
+          <span>© <CopyrightYear /> {t.copyright}</span>
+          <span>{t.notAffiliated}</span>
         </div>
       </div>
     </footer>

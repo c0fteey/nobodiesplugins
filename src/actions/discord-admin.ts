@@ -8,9 +8,12 @@ import { discordRoleRules, discordSettings, discordSyncLog } from "@/db/schema";
 import { assertAdmin } from "@/lib/auth-guard";
 import { syncAllDiscordMembers } from "@/lib/discord";
 import type { AdminResult } from "./admin";
+import { admin } from "@/lang/admin";
+
+const e = admin.errors;
 
 // Discord IDs ("snowflakes") are 17-20 digit numbers
-const snowflake = z.string().trim().regex(/^\d{17,20}$/, "Discord IDs are 17-20 digit numbers");
+const snowflake = z.string().trim().regex(/^\d{17,20}$/, e.discordId);
 
 const settingsSchema = z.object({
   guildId: snowflake.or(z.literal("")).transform((v) => v || null),
@@ -22,8 +25,8 @@ const settingsSchema = z.object({
 export async function saveDiscordSettingsAction(input: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = settingsSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid data" };
-  if (parsed.data.enabled && !parsed.data.guildId) return { ok: false, error: "Set the server ID before enabling sync" };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? e.invalidData };
+  if (parsed.data.enabled && !parsed.data.guildId) return { ok: false, error: e.serverIdRequired };
 
   const values = { ...parsed.data, updatedAt: new Date() };
   await db.insert(discordSettings).values({ id: "main", ...values }).onConflictDoUpdate({ target: discordSettings.id, set: values });
@@ -39,14 +42,14 @@ const ruleSchema = z.object({
 export async function addDiscordRuleAction(input: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = ruleSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid data" };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? e.invalidData };
   const { productId, roleId } = parsed.data;
 
   const clash = await db.query.discordRoleRules.findFirst({
     where: and(eq(discordRoleRules.roleId, roleId), productId ? eq(discordRoleRules.productId, productId) : isNull(discordRoleRules.productId)),
     columns: { id: true },
   });
-  if (clash) return { ok: false, error: "This rule already exists" };
+  if (clash) return { ok: false, error: e.ruleExists };
 
   await db.insert(discordRoleRules).values({ productId, roleId });
   revalidatePath("/admin/discord");
@@ -56,7 +59,7 @@ export async function addDiscordRuleAction(input: unknown): Promise<AdminResult>
 export async function deleteDiscordRuleAction(id: unknown): Promise<AdminResult> {
   await assertAdmin();
   const parsed = z.uuid().safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  if (!parsed.success) return { ok: false, error: e.invalidId };
   await db.delete(discordRoleRules).where(eq(discordRoleRules.id, parsed.data));
   revalidatePath("/admin/discord");
   return { ok: true };
@@ -68,7 +71,7 @@ export type SyncAllResult = { ok: true; total: number; synced: number } | { ok: 
 export async function syncAllDiscordAction(): Promise<SyncAllResult> {
   await assertAdmin();
   const config = await db.query.discordSettings.findFirst();
-  if (!config?.enabled || !config.guildId) return { ok: false, error: "Enable sync and set the server ID first" };
+  if (!config?.enabled || !config.guildId) return { ok: false, error: e.enableFirst };
 
   const { total, ok } = await syncAllDiscordMembers();
   revalidatePath("/admin/discord");

@@ -9,8 +9,11 @@ import { getOrdersWithItems } from "@/lib/data/account";
 import { formatDate, formatPrice } from "@/lib/format";
 import { PasswordForm, PreferencesForm, ProfileForm } from "@/components/panel/settings-forms";
 import { Skeleton } from "@/components/ui/skeleton";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "Settings" };
+const t = site.settings;
+
+export const metadata: Metadata = { title: site.meta.pages.settings };
 
 export default function SettingsPage() {
   return (
@@ -40,25 +43,25 @@ async function Settings() {
         {user.passwordHash ? (
           <PasswordForm />
         ) : (
-          <p className="text-sm text-white/60">You signed in with Google or Discord, so there is no password to change.</p>
+          <p className="text-sm text-white/60">{t.noPassword}</p>
         )}
       </section>
 
       <div className="grid gap-4 md:grid-cols-[1fr_170px]">
         <section className={card}>
-          <h2 className="text-xs font-bold tracking-[0.18em] text-white/60">PAYMENT TRANSACTIONS</h2>
+          <h2 className="text-xs font-bold tracking-[0.18em] text-white/60">{t.transactions}</h2>
           {orders.length === 0 ? (
-            <p className="mt-6 text-sm text-white/50">No transactions yet.</p>
+            <p className="mt-6 text-sm text-white/50">{t.noTransactions}</p>
           ) : (
             <div className="mt-6 overflow-x-auto">
               <table className="w-full min-w-[480px] text-left text-sm">
                 <thead>
                   <tr className="border-y border-white/5 text-[10px] font-bold tracking-[0.14em] text-white/60">
-                    <th className="py-3 pl-6">DATE</th>
-                    <th className="py-3">PRODUCT</th>
-                    <th className="py-3">AMOUNT</th>
-                    <th className="py-3">STATUS</th>
-                    <th className="py-3 text-center">INVOICE</th>
+                    <th className="py-3 pl-6">{t.columns.date}</th>
+                    <th className="py-3">{t.columns.product}</th>
+                    <th className="py-3">{t.columns.amount}</th>
+                    <th className="py-3">{t.columns.status}</th>
+                    <th className="py-3 text-center">{t.columns.invoice}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -71,10 +74,10 @@ async function Settings() {
                       </td>
                       <td className="py-5">{formatPrice(o.totalCents)}</td>
                       <td className="py-5">
-                        <span className="rounded-sm bg-success/15 px-1.5 py-0.5 text-[10px] font-bold text-success uppercase">● {o.status}</span>
+                        <span className="rounded-sm bg-success/15 px-1.5 py-0.5 text-[10px] font-bold text-success uppercase">● {t.orderStatuses[o.status]}</span>
                       </td>
                       <td className="py-5 text-center">
-                        <a href={`/api/invoice/${o.id}`} aria-label="Download invoice" className="inline-flex text-brand-soft hover:text-white">
+                        <a href={`/api/invoice/${o.id}`} aria-label={t.downloadInvoice} className="inline-flex text-brand-soft hover:text-white">
                           <DownloadIcon className="size-4" />
                         </a>
                       </td>
@@ -86,13 +89,13 @@ async function Settings() {
           )}
         </section>
         <section className="rounded-xl border border-white/10 bg-[#13121c] p-6">
-          <p className="font-bold">Need a Custom Invoice?</p>
-          <p className="mt-2 text-xs text-white/60">Contact our team for VAT invoices or corporate purchase setups.</p>
+          <p className="font-bold">{t.customInvoice}</p>
+          <p className="mt-2 text-xs text-white/60">{t.customInvoiceText}</p>
           <Link
             href="/help"
             className="mt-5 block rounded-sm bg-brand px-3 py-2 text-center text-sm font-bold text-white transition hover:bg-brand/85"
           >
-            Request Custom Invoice
+            {t.requestInvoice}
           </Link>
         </section>
       </div>

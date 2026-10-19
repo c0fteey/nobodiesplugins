@@ -2,6 +2,9 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, discordRoleRules, discordSettings, discordSyncLog, orderItems, orders } from "@/db/schema";
+import { admin } from "@/lang/admin";
+
+const m = admin.discord.sync;
 
 // One Discord application does both jobs: OAuth login (AUTH_DISCORD_ID/SECRET)
 // and the bot that hands out roles (DISCORD_BOT_TOKEN). Discord requires the bot
@@ -65,7 +68,7 @@ export type GuildStatus =
 
 /** What the admin page needs: is the bot in the server, which roles exist, which can it hand out. */
 export async function getGuildStatus(guildId: string): Promise<GuildStatus> {
-  if (!discordBotConfigured) return { ok: false, error: "DISCORD_BOT_TOKEN / AUTH_DISCORD_ID / AUTH_DISCORD_SECRET are not set" };
+  if (!discordBotConfigured) return { ok: false, error: m.notConfigured };
   try {
     const [guild, roles, bot] = await Promise.all([
       api<{ name: string }>(`/guilds/${guildId}`),
@@ -79,8 +82,8 @@ export async function getGuildStatus(guildId: string): Promise<GuildStatus> {
     const isAdmin = (perms & ADMINISTRATOR) !== NONE;
 
     const warnings: string[] = [];
-    if (!isAdmin && !(perms & MANAGE_ROLES)) warnings.push("The bot is missing the Manage Roles permission.");
-    if (!isAdmin && !(perms & CREATE_INVITE)) warnings.push("The bot is missing Create Invite, so it can't add members to the server.");
+    if (!isAdmin && !(perms & MANAGE_ROLES)) warnings.push(m.missingManageRoles);
+    if (!isAdmin && !(perms & CREATE_INVITE)) warnings.push(m.missingInvite);
 
     return {
       ok: true,
@@ -99,10 +102,10 @@ export async function getGuildStatus(guildId: string): Promise<GuildStatus> {
     };
   } catch (error) {
     if (error instanceof DiscordError && (error.status === 403 || error.status === 404)) {
-      return { ok: false, error: "The bot can't see this server. Invite it with the button below, then check the server ID." };
+      return { ok: false, error: m.cantSeeServer };
     }
-    if (error instanceof DiscordError && error.status === 401) return { ok: false, error: "DISCORD_BOT_TOKEN is invalid." };
-    return { ok: false, error: error instanceof Error ? error.message : "Discord request failed" };
+    if (error instanceof DiscordError && error.status === 401) return { ok: false, error: m.invalidToken };
+    return { ok: false, error: error instanceof Error ? error.message : m.requestFailed };
   }
 }
 
@@ -142,13 +145,13 @@ export type SyncResult = { ok: boolean; message: string };
  */
 export async function syncDiscordMember(userId: string): Promise<SyncResult> {
   const config = await db.query.discordSettings.findFirst();
-  if (!config?.enabled || !config.guildId || !discordBotConfigured) return { ok: false, message: "Discord sync is off" };
+  if (!config?.enabled || !config.guildId || !discordBotConfigured) return { ok: false, message: m.off };
   const guildId = config.guildId;
 
   const account = await db.query.accounts.findFirst({
     where: and(eq(accounts.userId, userId), eq(accounts.provider, "discord")),
   });
-  if (!account) return { ok: false, message: "No Discord account linked" };
+  if (!account) return { ok: false, message: m.notLinked };
   const discordId = account.providerAccountId;
 
   try {
@@ -174,14 +177,14 @@ export async function syncDiscordMember(userId: string): Promise<SyncResult> {
     }
 
     if (!member) {
-      if (!config.autoJoin) return done(userId, false, "Not in the Discord server yet");
+      if (!config.autoJoin) return done(userId, false, m.notInServer);
       const token = await userAccessToken(account);
-      if (!token) return done(userId, false, "Discord login expired; the user needs to reconnect Discord");
+      if (!token) return done(userId, false, m.loginExpired);
       await api(`/guilds/${guildId}/members/${discordId}`, {
         method: "PUT",
         body: JSON.stringify({ access_token: token, roles: [...wanted] }),
       });
-      return done(userId, true, `Joined the server with ${wanted.size} role(s)`);
+      return done(userId, true, m.joined(wanted.size));
     }
 
     const toAdd = [...wanted].filter((r) => !member.roles.includes(r));
@@ -189,15 +192,15 @@ export async function syncDiscordMember(userId: string): Promise<SyncResult> {
     for (const roleId of toAdd) await api(`/guilds/${guildId}/members/${discordId}/roles/${roleId}`, { method: "PUT" });
     for (const roleId of toRemove) await api(`/guilds/${guildId}/members/${discordId}/roles/${roleId}`, { method: "DELETE" });
 
-    if (!toAdd.length && !toRemove.length) return { ok: true, message: "Roles already up to date" };
-    return done(userId, true, `Added ${toAdd.length}, removed ${toRemove.length} role(s)`);
+    if (!toAdd.length && !toRemove.length) return { ok: true, message: m.upToDate };
+    return done(userId, true, m.changed(toAdd.length, toRemove.length));
   } catch (error) {
     const message =
       error instanceof DiscordError && error.status === 403
-        ? "Missing permissions: move the bot's role above the roles it gives out"
+        ? m.missingPermissions
         : error instanceof Error
           ? error.message
-          : "Discord request failed";
+          : m.requestFailed;
     return done(userId, false, message);
   }
 }

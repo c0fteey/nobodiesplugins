@@ -7,6 +7,9 @@ import { signIn, signOut } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { signInSchema, signUpSchema } from "@/lib/validations/auth";
+import { site } from "@/lang/site";
+
+const t = site.auth.errors;
 
 export type ActionResult = { error: string } | undefined;
 
@@ -20,7 +23,7 @@ function safeRedirect(target: unknown) {
 export async function signInAction(input: unknown, callbackUrl?: string): Promise<ActionResult> {
   // Never trust the client: re-validate at runtime
   const parsed = signInSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid sign-in details" };
+  if (!parsed.success) return { error: t.invalidSignIn };
 
   try {
     await signIn("credentials", {
@@ -29,7 +32,7 @@ export async function signInAction(input: unknown, callbackUrl?: string): Promis
       redirectTo: safeRedirect(callbackUrl),
     });
   } catch (error) {
-    if (error instanceof AuthError) return { error: "Wrong email or password" };
+    if (error instanceof AuthError) return { error: t.wrongCredentials };
     throw error; // redirect after a successful sign-in
   }
 }
@@ -37,7 +40,7 @@ export async function signInAction(input: unknown, callbackUrl?: string): Promis
 export async function signUpAction(input: unknown): Promise<ActionResult> {
   const parsed = signUpSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid details" };
+    return { error: parsed.error.issues[0]?.message ?? t.invalidDetails };
   }
   const { email, password } = parsed.data;
 
@@ -45,7 +48,7 @@ export async function signUpAction(input: unknown): Promise<ActionResult> {
     where: eq(users.email, email),
     columns: { id: true },
   });
-  if (existing) return { error: "An account with this email already exists" };
+  if (existing) return { error: t.emailTaken };
 
   const passwordHash = await bcrypt.hash(password, 12);
   const name = email.split("@")[0];
@@ -54,7 +57,7 @@ export async function signUpAction(input: unknown): Promise<ActionResult> {
   try {
     await signIn("credentials", { email, password, redirectTo: "/dashboard" });
   } catch (error) {
-    if (error instanceof AuthError) return { error: "Account created, but sign-in failed" };
+    if (error instanceof AuthError) return { error: t.createdButFailed };
     throw error;
   }
 }

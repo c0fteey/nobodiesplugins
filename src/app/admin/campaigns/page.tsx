@@ -4,8 +4,12 @@ import { ArrowRightIcon } from "lucide-react";
 import { getAllCampaigns, getAllProducts } from "@/lib/data/admin";
 import { formatDate } from "@/lib/format";
 import { AdminCard, AdminHeader, StatusPill, td, th } from "@/components/admin/ui";
+import { admin } from "@/lang/admin";
 
-export const metadata: Metadata = { title: "Campaigns · Admin" };
+const t = admin.campaigns;
+const c$ = admin.common;
+
+export const metadata: Metadata = { title: admin.meta.campaigns + admin.meta.suffix };
 
 export default async function AdminCampaignsPage() {
   const [campaigns, products] = await Promise.all([getAllCampaigns(), getAllProducts()]);
@@ -14,18 +18,18 @@ export default async function AdminCampaignsPage() {
   return (
     <>
       <AdminHeader
-        title="Campaigns"
-        description='"Buy X, get Y free". The free product is delivered automatically with the order, and the offer card with a countdown shows on X.'
-        action={{ href: "/admin/campaigns/new", label: "New campaign" }}
+        title={t.title}
+        description={t.description}
+        action={{ href: "/admin/campaigns/new", label: t.newCampaign }}
       />
       <AdminCard className="overflow-x-auto">
         <table className="w-full min-w-[760px]">
           <thead className="border-b border-white/5">
             <tr>
-              <th className={th}>CAMPAIGN</th>
-              <th className={th}>BUY → GET FREE</th>
-              <th className={th}>RUNS</th>
-              <th className={th}>STATUS</th>
+              <th className={th}>{t.columns.campaign}</th>
+              <th className={th}>{t.columns.buyGet}</th>
+              <th className={th}>{t.columns.runs}</th>
+              <th className={th}>{t.columns.status}</th>
             </tr>
           </thead>
           <tbody>
@@ -42,13 +46,13 @@ export default async function AdminCampaignsPage() {
                   </span>
                 </td>
                 <td className={`${td} text-xs text-white/60`}>
-                  {c.startsAt ? formatDate(c.startsAt) : "Now"} → {c.endsAt ? formatDate(c.endsAt) : "No end"}
+                  {c.startsAt ? formatDate(c.startsAt) : c$.now} → {c.endsAt ? formatDate(c.endsAt) : c$.noEnd}
                 </td>
-                <td className={td}><StatusPill on={c.active} onLabel="Active" offLabel="Off" /></td>
+                <td className={td}><StatusPill on={c.active} onLabel={c$.active} offLabel={c$.off} /></td>
               </tr>
             ))}
             {campaigns.length === 0 && (
-              <tr><td className={`${td} text-white/50`} colSpan={4}>No campaigns yet.</td></tr>
+              <tr><td className={`${td} text-white/50`} colSpan={4}>{t.empty}</td></tr>
             )}
           </tbody>
         </table>

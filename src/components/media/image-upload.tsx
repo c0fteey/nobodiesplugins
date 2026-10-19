@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { createUploadAction } from "@/actions/upload";
 import { acceptFor, checkUpload, type UploadKind } from "@/lib/upload-limits";
 import { cn } from "@/lib/utils";
+import { site } from "@/lang/site";
 
 /** Signs, then sends the file straight from the browser to the bucket. Returns the public URL. */
 export async function uploadImage(file: File, kind: UploadKind): Promise<string> {
@@ -25,14 +26,14 @@ export async function uploadImage(file: File, kind: UploadKind): Promise<string>
   } else {
     res = await fetch(upload.url, { method: "PUT", body: file, headers: upload.headers });
   }
-  if (!res.ok) throw new Error("Upload failed, please try again");
+  if (!res.ok) throw new Error(site.upload.failed);
   return ticket.url;
 }
 
 export function ImageUploadButton({
   kind,
   onUploaded,
-  label = "Upload",
+  label = site.upload.upload,
   className,
 }: {
   kind: UploadKind;
@@ -49,7 +50,7 @@ export function ImageUploadButton({
     try {
       await onUploaded(await uploadImage(file, kind));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Upload failed");
+      toast.error(error instanceof Error ? error.message : site.upload.failed);
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -68,8 +69,8 @@ export function ImageUploadButton({
       <button
         type="button"
         disabled={busy}
-        aria-label={label || "Upload image"}
-        title={label || "Upload image"}
+        aria-label={label || site.upload.uploadImage}
+        title={label || site.upload.uploadImage}
         onClick={() => inputRef.current?.click()}
         className={cn(
           "inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 text-sm font-semibold text-white/85 transition hover:border-brand hover:text-white disabled:opacity-60",
@@ -77,7 +78,7 @@ export function ImageUploadButton({
         )}
       >
         {busy ? <Loader2Icon className="size-4 animate-spin" /> : <UploadIcon className="size-4" />}
-        {label && (busy ? "Uploading…" : label)}
+        {label && (busy ? site.upload.uploading : label)}
       </button>
     </>
   );

@@ -6,8 +6,12 @@ import { getProducts, getSettings } from "@/lib/data/store";
 import { BundleCard, PluginPanelCard } from "@/components/panel/dashboard-cards";
 import { AccountCoupons } from "@/components/panel/account-coupons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getRoleByKey } from "@/lib/data/roles";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "Dashboard" };
+const t = site.dashboard;
+
+export const metadata: Metadata = { title: site.meta.pages.dashboard };
 
 export default function DashboardHome() {
   return (
@@ -19,12 +23,13 @@ export default function DashboardHome() {
 
 async function DashboardContent() {
   const user = await requireUser();
-  const [products, owned, licenses, settings, coupons] = await Promise.all([
+  const [products, owned, licenses, settings, coupons, role] = await Promise.all([
     getProducts(),
     getOwnedProductIds(user.id),
     getLicenses(user.id),
     getSettings(),
     getAccountCoupons(user.id),
+    getRoleByKey(user.role),
   ]);
 
   const plugins = products.filter((p) => p.type === "plugin");
@@ -47,29 +52,29 @@ async function DashboardContent() {
           <BundleCard plugin={bundlePlugin} items={bundleItems} />
         ) : (
           <div className="rounded-xl border border-white/5 bg-[#1b1a26] p-10">
-            <p className="text-3xl font-bold">You own the whole collection 🎉</p>
-            <p className="mt-3 text-white/70">New plugins and add-ons will show up here as soon as they launch.</p>
+            <p className="text-3xl font-bold">{t.ownAll}</p>
+            <p className="mt-3 text-white/70">{t.ownAllText}</p>
           </div>
         )}
 
         <div className="rounded-xl border border-white/5 bg-[#171717] p-8">
-          <h2 className="text-xl font-bold">Account Overview</h2>
-          <p className="mt-2 text-sm text-white/60">Overview of your active licenses and usage.</p>
+          <h2 className="text-xl font-bold">{t.overview}</h2>
+          <p className="mt-2 text-sm text-white/60">{t.overviewText}</p>
           <ul className="mt-6 divide-y divide-white/5 text-sm">
             <li className="flex items-center justify-between py-4">
-              <span className="flex items-center gap-3"><span className="size-1.5 rounded-full bg-brand-soft" /> Total Purchases</span>
+              <span className="flex items-center gap-3"><span className="size-1.5 rounded-full bg-brand-soft" /> {t.totalPurchases}</span>
               <span className="font-bold">{owned.size}</span>
             </li>
             <li className="flex items-center justify-between py-4">
-              <span className="flex items-center gap-3"><span className="size-1.5 rounded-full bg-brand-soft" /> Active Licenses</span>
+              <span className="flex items-center gap-3"><span className="size-1.5 rounded-full bg-brand-soft" /> {t.activeLicenses}</span>
               <span className="font-mono font-bold">{activeLicenses}</span>
             </li>
           </ul>
           <div className="mt-6 flex items-center gap-4 rounded-lg bg-[#1e1e1e] p-4">
             <span className="grid size-10 place-items-center rounded-md bg-brand/20 text-brand-soft">★</span>
             <span>
-              <span className="block text-xs text-white/60">Account Tier</span>
-              <span className="font-bold text-brand-soft">{user.role === "admin" ? "Administrator" : owned.size > 0 ? "Premium Member" : "Member"}</span>
+              <span className="block text-xs text-white/60">{t.accountTier}</span>
+              <span className="font-bold" style={{ color: role?.color }}>{role?.name ?? user.role}</span>
             </span>
           </div>
         </div>

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { ProductArt } from "./product-art";
 import { SaleRibbon } from "./cart-drawer";
 import { useCart } from "./cart-provider";
+import { site } from "@/lang/site";
 
 export function AddToCartButton({ productId, className }: { productId: string; className?: string }) {
   const { add, has } = useCart();
@@ -26,7 +27,7 @@ export function AddToCartButton({ productId, className }: { productId: string; c
       )}
     >
       {inCart && <CheckIcon className="size-4" />}
-      {inCart ? "In cart" : "Add to cart"}
+      {inCart ? site.productCard.inCart : site.productCard.addToCart}
     </motion.button>
   );
 }
@@ -40,7 +41,7 @@ export function PriceTag({ product, size = "md" }: { product: Product; size?: "m
         <p className="text-[11px] opacity-0">-</p>
       )}
       <p className={cn("font-semibold tracking-tight", size === "lg" ? "text-3xl" : "text-[22px]")}>
-        {product.priceCents === 0 ? "Free" : formatPrice(product.priceCents)}
+        {product.priceCents === 0 ? site.common.free : formatPrice(product.priceCents)}
       </p>
     </div>
   );
@@ -61,7 +62,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
         <motion.div whileHover={{ scale: 1.04 }} transition={{ type: "spring", stiffness: 300, damping: 25 }}>
           <ProductArt product={product} priority={priority} className="aspect-[4/3] w-full" />
         </motion.div>
-        {product.badge && <SaleRibbon label={product.badge === "sale" ? "Sale" : "New"} />}
+        {product.badge && <SaleRibbon label={product.badge === "sale" ? site.common.sale : site.common.new} />}
       </Link>
       <h3 className="mt-5 text-base font-bold">
         <Link href={`/products/${product.slug}`} className="transition hover:text-brand-soft">
@@ -91,7 +92,7 @@ export function FeatureCard({ product }: { product: Product }) {
       <Link href={`/products/${product.slug}`} className="absolute inset-0">
         <ProductArt product={product} size="lg" sizes="420px" className="absolute inset-0 transition duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-        {product.badge && <SaleRibbon label={product.badge === "sale" ? "Sale" : "New"} />}
+        {product.badge && <SaleRibbon label={product.badge === "sale" ? site.common.sale : site.common.new} />}
         <div className="absolute inset-x-0 bottom-0 p-6">
           <h3 className="text-xl font-bold">{product.name}</h3>
           <p className="mt-2 line-clamp-3 text-sm text-white/85">{product.shortDescription}</p>

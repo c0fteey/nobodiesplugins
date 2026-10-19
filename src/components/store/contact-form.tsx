@@ -9,8 +9,12 @@ import { sendContactAction } from "@/actions/store";
 import { contactSchema, type ContactInput } from "@/lib/validations/store";
 import { cn } from "@/lib/utils";
 import { ChoiceSelect } from "@/components/ui/choice-select";
+import { site } from "@/lang/site";
 
-const SUBJECTS = (["Technical Support", "Billing", "Feature Request", "Other"] as const).map((s) => ({ value: s, label: s }));
+const t = site.contact;
+
+// Values stay English (stored + validated); only the labels are translated
+const SUBJECTS = (["Technical Support", "Billing", "Feature Request", "Other"] as const).map((s) => ({ value: s, label: t.subjects[s] }));
 
 const fieldClass =
   "w-full rounded-md bg-[#1c1c1e] px-4 py-3 text-[15px] outline-none ring-1 ring-transparent transition placeholder:text-white/40 focus:ring-brand aria-invalid:ring-destructive";
@@ -32,19 +36,19 @@ export function ContactForm() {
     startTransition(async () => {
       const result = await sendContactAction(values);
       if (!result.ok) return void toast.error(result.error);
-      toast.success("Message sent — we'll get back to you soon");
+      toast.success(t.sent);
       reset();
     });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="grid gap-5">
-      <Field label="Your Name" error={errors.name?.message}>
-        <input {...register("name")} placeholder="Your Name" className={fieldClass} aria-invalid={!!errors.name} />
+      <Field label={t.name} error={errors.name?.message}>
+        <input {...register("name")} placeholder={t.namePlaceholder} className={fieldClass} aria-invalid={!!errors.name} />
       </Field>
-      <Field label="Your Email" required error={errors.email?.message}>
-        <input {...register("email")} type="email" placeholder="you@example.com" className={fieldClass} aria-invalid={!!errors.email} />
+      <Field label={t.email} required error={errors.email?.message}>
+        <input {...register("email")} type="email" placeholder={site.auth.fields.emailPlaceholder} className={fieldClass} aria-invalid={!!errors.email} />
       </Field>
-      <Field label="Subject" required error={errors.subject?.message}>
+      <Field label={t.subject} required error={errors.subject?.message}>
         <Controller
           control={control}
           name="subject"
@@ -59,7 +63,7 @@ export function ContactForm() {
           )}
         />
       </Field>
-      <Field label="Message" required error={errors.message?.message}>
+      <Field label={t.message} required error={errors.message?.message}>
         <textarea {...register("message")} rows={5} className={cn(fieldClass, "resize-y")} aria-invalid={!!errors.message} />
       </Field>
       <button
@@ -68,7 +72,7 @@ export function ContactForm() {
         className="mt-2 inline-flex h-12 w-52 items-center justify-center gap-2 rounded-full bg-brand font-medium text-white transition hover:bg-brand/85 disabled:opacity-60"
       >
         {pending && <Loader2Icon className="size-4 animate-spin" />}
-        Send Message
+        {t.send}
       </button>
     </form>
   );

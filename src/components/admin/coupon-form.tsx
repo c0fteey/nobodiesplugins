@@ -12,6 +12,9 @@ import { deleteCouponAction, saveCouponAction } from "@/actions/admin";
 import { couponSchema } from "@/lib/validations/store";
 import { PRODUCT_TYPE_LABEL, toDateTimeLocal } from "@/lib/format";
 import { Field, inputCls, Section, Toggle } from "./form-bits";
+import { admin } from "@/lang/admin";
+
+const t = admin.coupons.form;
 
 type FormIn = z.input<typeof couponSchema>;
 type FormOut = z.output<typeof couponSchema>;
@@ -62,20 +65,21 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
         startSave(async () => {
           const result = await saveCouponAction(values);
           if (!result.ok) return void toast.error(result.error);
-          toast.success(coupon ? "Coupon updated" : "Coupon created");
+          toast.success(coupon ? t.updated : t.created);
           router.push("/admin/coupons");
         }),
       )}
       className="grid max-w-4xl gap-6"
     >
-      <Section title="Code">
+      <Section title={t.sections.code}>
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Coupon code" hint="Customers type it at checkout (not case-sensitive)" error={errors.code?.message}>
+          <Field label={t.code} hint={t.codeHint} error={errors.code?.message}>
             <div className="flex gap-2">
               <input {...register("code")} className={`${inputCls} font-mono uppercase`} aria-invalid={!!errors.code} />
               <button
                 type="button"
-                title="Generate a random code"
+                title={t.generate}
+                aria-label={t.generate}
                 onClick={() => setValue("code", randomCode(), { shouldValidate: true })}
                 className="grid size-10 shrink-0 place-items-center rounded-md border border-white/10 text-white/70 hover:text-white"
               >
@@ -83,56 +87,56 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
               </button>
             </div>
           </Field>
-          <Field label="Internal description" error={errors.description?.message}>
-            <input {...register("description")} placeholder="e.g. Black Friday, YouTube partner" className={inputCls} />
+          <Field label={t.internalDescription} error={errors.description?.message}>
+            <input {...register("description")} placeholder={t.internalDescriptionPlaceholder} className={inputCls} />
           </Field>
         </div>
       </Section>
 
-      <Section title="Discount">
+      <Section title={t.sections.discount}>
         <div className="grid gap-4 md:grid-cols-3">
-          <Field label="Type">
+          <Field label={t.type}>
             <select {...register("type")} className={inputCls}>
-              <option value="percent">Percentage (%)</option>
-              <option value="fixed">Fixed amount (€)</option>
+              <option value="percent">{t.percent}</option>
+              <option value="fixed">{t.fixed}</option>
             </select>
           </Field>
-          <Field label={type === "fixed" ? "Amount (€)" : "Percent (%)"} error={errors.amount?.message}>
+          <Field label={type === "fixed" ? t.amountFixed : t.amountPercent} error={errors.amount?.message}>
             <input type="number" step={type === "fixed" ? "0.01" : "1"} {...register("amount")} className={inputCls} />
           </Field>
-          <Field label="Minimum cart (€)" hint="0 = no minimum" error={errors.minSubtotal?.message}>
+          <Field label={t.minCart} hint={t.minCartHint} error={errors.minSubtotal?.message}>
             <input type="number" step="0.01" {...register("minSubtotal")} className={inputCls} />
           </Field>
         </div>
       </Section>
 
-      <Section title="Who can use it">
+      <Section title={t.sections.who}>
         <div className="grid gap-4 md:grid-cols-2">
           <Field
-            label="Lock to an account (email)"
-            hint="Only this account can use it and it shows up in their dashboard. Leave empty for everyone."
+            label={t.lockEmail}
+            hint={t.lockEmailHint}
             error={errors.userEmail?.message}
           >
-            <input type="email" {...register("userEmail")} placeholder="player@example.com" className={inputCls} />
+            <input type="email" {...register("userEmail")} placeholder={t.lockEmailPlaceholder} className={inputCls} />
           </Field>
-          <Field label="Creator / partner name" hint="Shown next to the discount, e.g. a YouTuber's name" error={errors.creatorName?.message}>
+          <Field label={t.creator} hint={t.creatorHint} error={errors.creatorName?.message}>
             <input {...register("creatorName")} className={inputCls} />
           </Field>
-          <Field label="Total uses" hint="Empty = unlimited" error={errors.maxUses?.message}>
+          <Field label={t.totalUses} hint={t.totalUsesHint} error={errors.maxUses?.message}>
             <input type="number" min="1" {...register("maxUses", { setValueAs: nullIfEmpty })} className={inputCls} />
           </Field>
-          <Field label="Uses per account" error={errors.perUserLimit?.message}>
+          <Field label={t.perAccount} error={errors.perUserLimit?.message}>
             <input type="number" min="1" {...register("perUserLimit")} className={inputCls} />
           </Field>
         </div>
       </Section>
 
-      <Section title="Valid for">
+      <Section title={t.sections.valid}>
         <div className="grid gap-4 md:grid-cols-2">
-          <Field label="Starts" hint="Empty = immediately" error={errors.startsAt?.message}>
+          <Field label={t.starts} hint={t.startsHint} error={errors.startsAt?.message}>
             <input type="datetime-local" {...register("startsAt")} className={inputCls} />
           </Field>
-          <Field label="Expires" hint="Empty = never" error={errors.expiresAt?.message}>
+          <Field label={t.expires} hint={t.expiresHint} error={errors.expiresAt?.message}>
             <input type="datetime-local" {...register("expiresAt")} className={inputCls} />
           </Field>
         </div>
@@ -151,14 +155,14 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
               <div>
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <span className="text-xs font-semibold text-white/80">
-                    Only these products {selected.size === 0 ? "(none selected = whole cart)" : `(${selected.size} selected)`}
+                    {t.onlyProducts} {selected.size === 0 ? t.noneSelected : t.selected(selected.size)}
                   </span>
-                  <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter…" className={`${inputCls} h-8 w-40`} />
+                  <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={t.filter} className={`${inputCls} h-8 w-40`} />
                 </div>
                 <div className="grid max-h-56 gap-1 overflow-y-auto rounded-md border border-white/10 p-2 sm:grid-cols-2">
                   {visible.map((p) => (
                     <label key={p.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-white/5">
-                      <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} className="size-4 accent-brand" />
+                      <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} />
                       <span className="truncate">{p.name}</span>
                       <span className="ml-auto text-[10px] text-white/40">{PRODUCT_TYPE_LABEL[p.type]}</span>
                     </label>
@@ -168,29 +172,29 @@ export function CouponForm({ coupon, ownerEmail, products }: { coupon: Coupon | 
             );
           }}
         />
-        <Toggle label="Active" {...register("active")} />
+        <Toggle label={admin.common.active} {...register("active")} />
       </Section>
 
       <div className="flex gap-3">
         <button type="submit" disabled={saving} className="flex h-11 w-48 items-center justify-center gap-2 rounded-md bg-brand font-semibold text-white transition hover:bg-brand/85 disabled:opacity-60">
-          {saving && <Loader2Icon className="size-4 animate-spin" />} {coupon ? "Save coupon" : "Create coupon"}
+          {saving && <Loader2Icon className="size-4 animate-spin" />} {coupon ? t.save : t.create}
         </button>
         {coupon && (
           <button
             type="button"
             disabled={deleting}
             onClick={() => {
-              if (!confirm(`Delete ${coupon.code}?`)) return;
+              if (!confirm(admin.common.deleteConfirm(coupon.code))) return;
               startDelete(async () => {
                 const result = await deleteCouponAction(coupon.id);
                 if (!result.ok) return void toast.error(result.error);
-                toast.success("Coupon deleted");
+                toast.success(t.deleted);
                 router.push("/admin/coupons");
               });
             }}
             className="flex h-11 items-center gap-2 rounded-md border border-destructive/40 px-4 text-sm font-semibold text-destructive hover:bg-destructive/10"
           >
-            <Trash2Icon className="size-4" /> Delete
+            <Trash2Icon className="size-4" /> {admin.common.delete}
           </button>
         )}
       </div>

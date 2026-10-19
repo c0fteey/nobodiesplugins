@@ -9,20 +9,23 @@ import { ProductArt } from "@/components/store/product-art";
 import { ChoiceSelect } from "@/components/ui/choice-select";
 import { PRODUCT_TYPE_LABEL, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { site } from "@/lang/site";
+
+const t = site.purchases;
 
 type Purchase = { product: Product; acquiredAt: string };
 type Filter = "all" | Product["type"];
 
 const STAT_TYPES = [
-  { key: "plugin", label: "PLUGINS" },
-  { key: "model", label: "MODELS" },
-  { key: "build", label: "BUILDS" },
+  { key: "plugin", label: t.stats.plugins },
+  { key: "model", label: t.stats.models },
+  { key: "build", label: t.stats.builds },
 ] as const;
 
 const SORT_OPTIONS = [
-  { value: "recommended", label: "Recommended" },
-  { value: "newest", label: "Newest" },
-  { value: "name", label: "Name" },
+  { value: "recommended", label: t.sorts.recommended },
+  { value: "newest", label: t.sorts.newest },
+  { value: "name", label: t.sorts.name },
 ] as const;
 
 export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
@@ -53,7 +56,7 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
   return (
     <div className="mt-8">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="TOTAL" value={purchases.length} />
+        <Stat label={t.stats.total} value={purchases.length} />
         {STAT_TYPES.map((s) => (
           <Stat key={s.key} label={s.label} value={counts[s.key] ?? 0} />
         ))}
@@ -65,8 +68,8 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search your purchases..."
-            aria-label="Search your purchases"
+            placeholder={t.searchPlaceholder}
+            aria-label={t.searchLabel}
             className="h-11 w-full rounded-lg border border-white/10 bg-[#171717] pr-4 pl-11 text-sm outline-none focus:border-brand"
           />
         </div>
@@ -74,7 +77,7 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
           value={sort}
           onChange={setSort}
           options={SORT_OPTIONS}
-          aria-label="Sort purchases"
+          aria-label={t.sortLabel}
           className="h-11 rounded-lg border-white/10 bg-[#171717] px-4 sm:w-44 dark:bg-[#171717]"
         />
       </div>
@@ -90,7 +93,7 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
               filter === k ? "border-brand-soft/50 bg-brand/15 text-white" : "border-white/10 text-white/70 hover:text-white",
             )}
           >
-            {k === "all" ? "All" : `${PRODUCT_TYPE_LABEL[k]}s`}
+            {k === "all" ? site.common.all : site.productTypesPlural[k]}
             <span className="rounded-full bg-white/10 px-1.5 text-xs">{counts[k] ?? 0}</span>
           </button>
         ))}
@@ -99,10 +102,10 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
       {visible.length === 0 ? (
         <div className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-dashed border-white/10 py-20 text-center text-white/60">
           <PackageOpenIcon className="size-8" />
-          {purchases.length === 0 ? "You haven't bought anything yet." : "Nothing matches your search."}
+          {purchases.length === 0 ? t.emptyNone : t.emptySearch}
           {purchases.length === 0 && (
             <Link href="/products" className="text-sm font-semibold text-brand-soft hover:underline">
-              Browse the store
+              {t.browseStore}
             </Link>
           )}
         </div>
@@ -127,18 +130,18 @@ export function PurchasesGrid({ purchases }: { purchases: Purchase[] }) {
                 <div className="p-5">
                   <h3 className="font-bold">{product.name}</h3>
                   <p className="mt-1 text-xs text-white/50">
-                    Version {product.version} · Acquired {timeAgo(new Date(acquiredAt))}
+                    {t.meta(product.version, timeAgo(new Date(acquiredAt)))}
                   </p>
                   <div className="mt-4 flex gap-2">
                     <a
                       href={`/api/download/${product.id}`}
                       className="flex h-10 flex-1 items-center justify-center gap-2 rounded-md bg-[#c4b5fd] text-sm font-bold text-[#1e1442] transition hover:bg-[#c4b5fd]/85"
                     >
-                      <CloudDownloadIcon className="size-4" /> DOWNLOAD
+                      <CloudDownloadIcon className="size-4" /> {t.download}
                     </a>
                     <Link
                       href={`/products/${product.slug}`}
-                      aria-label="Product details"
+                      aria-label={t.details}
                       className="grid size-10 place-items-center rounded-md border border-white/10 text-white/70 transition hover:text-white"
                     >
                       <InfoIcon className="size-4" />

@@ -4,13 +4,14 @@ import { requireUser } from "@/lib/auth-guard";
 import { getPurchases } from "@/lib/data/account";
 import { PurchasesGrid } from "@/components/panel/purchases-grid";
 import { Skeleton } from "@/components/ui/skeleton";
+import { site } from "@/lang/site";
 
-export const metadata: Metadata = { title: "My purchases" };
+export const metadata: Metadata = { title: site.meta.pages.purchases };
 
 export default function PurchasesPage() {
   return (
     <>
-      <h2 className="text-xl text-white/60">My Purchases</h2>
+      <h2 className="text-xl text-white/60">{site.purchases.title}</h2>
       <Suspense fallback={<Skeleton className="mt-8 h-[500px] rounded-xl" />}>
         <Purchases />
       </Suspense>

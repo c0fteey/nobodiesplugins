@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRightIcon } from "lucide-react";
+import { site } from "@/lang/site";
 
 export function SectionHeading({ title, description, href }: { title: string; description?: string; href?: string }) {
   return (
@@ -10,7 +11,7 @@ export function SectionHeading({ title, description, href }: { title: string; de
         {href && (
           <Link
             href={href}
-            aria-label={`See all ${title}`}
+            aria-label={site.common.seeAll(title)}
             className="grid size-6 place-items-center rounded-full bg-white/15 text-white/80 transition hover:bg-brand hover:text-white"
           >
             <ChevronRightIcon className="size-4" />

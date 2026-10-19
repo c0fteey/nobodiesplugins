@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Product } from "@/db/schema";
 import { ProductBrowser, type BrowserCategory } from "./product-browser";
+import { site } from "@/lang/site";
 
 // Category matchers are functions, so they're built here on the client
 // instead of being passed across the server/client boundary.
@@ -19,8 +20,8 @@ export function ProductsCatalog({ products }: { products: Product[] }) {
         label: shortName(plugin.name),
         match: (p: Product) => p.id === plugin.id || p.parentId === plugin.id,
       })),
-      { value: "model", label: "Models", match: (p: Product) => p.type === "model" },
-      { value: "build", label: "Builds", match: (p: Product) => p.type === "build" },
+      { value: "model", label: site.productsPage.categories.models, match: (p: Product) => p.type === "model" },
+      { value: "build", label: site.productsPage.categories.builds, match: (p: Product) => p.type === "build" },
     ];
   }, [products]);
 
@@ -43,5 +44,5 @@ export function AddonsCatalog({ addons, plugins }: { addons: Product[]; plugins:
   );
 
   const key = useSearchParams().get("category") ?? "all";
-  return <ProductBrowser key={key} products={addons} categories={categories} allLabel="All add-ons" />;
+  return <ProductBrowser key={key} products={addons} categories={categories} allLabel={site.addonsPage.allAddons} />;
 }

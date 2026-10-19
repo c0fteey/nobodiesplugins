@@ -1,9 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { site } from "@/lang/site";
 
 /** Placeholder with the same layout as the product browser (filters + card grid). */
 export function ProductGridSkeleton({ cards = 6 }: { cards?: number }) {
   return (
-    <div aria-busy="true" aria-label="Loading products" className="container-page grid gap-8 py-16 lg:grid-cols-[230px_1fr]">
+    <div aria-busy="true" aria-label={site.browser.loadingLabel} className="container-page grid gap-8 py-16 lg:grid-cols-[230px_1fr]">
       <div className="hidden space-y-3 lg:block">
         <Skeleton className="h-5 w-24" />
         {Array.from({ length: 5 }, (_, i) => (

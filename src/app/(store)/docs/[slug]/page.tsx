@@ -5,6 +5,7 @@ import { ChevronLeftIcon } from "lucide-react";
 import { getDocBySlug, getDocPages, getProducts } from "@/lib/data/store";
 import { DocContent } from "@/components/store/doc-content";
 import { cn } from "@/lib/utils";
+import { site } from "@/lang/site";
 
 export async function generateStaticParams() {
   const docs = await getDocPages();
@@ -14,7 +15,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps<"/docs/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const doc = await getDocBySlug(slug);
-  return doc ? { title: `${doc.title} — Docs`, description: doc.summary } : {};
+  return doc ? { title: site.meta.pages.docTitle(doc.title), description: doc.summary } : {};
 }
 
 export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
@@ -32,9 +33,9 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
     <div className="container-page grid gap-10 py-12 lg:grid-cols-[240px_1fr]">
       <aside className="h-fit lg:sticky lg:top-6">
         <Link href="/docs" className="inline-flex items-center gap-1 text-sm text-white/60 transition hover:text-white">
-          <ChevronLeftIcon className="size-4" /> All docs
+          <ChevronLeftIcon className="size-4" /> {site.docs.allDocs}
         </Link>
-        <p className="mt-6 text-xs font-bold tracking-[0.18em] text-brand-soft uppercase">{product?.name ?? "Resources"}</p>
+        <p className="mt-6 text-xs font-bold tracking-[0.18em] text-brand-soft uppercase">{product?.name ?? site.docs.resourcesSidebar}</p>
         <nav className="mt-3 flex flex-col border-l border-white/10">
           {siblings.map((d) => (
             <Link
@@ -63,7 +64,7 @@ export default async function DocPage({ params }: PageProps<"/docs/[slug]">) {
             className="mt-12 flex items-center justify-between rounded-lg border border-white/10 p-5 transition hover:border-brand"
           >
             <span>
-              <span className="block text-xs text-white/50">Next</span>
+              <span className="block text-xs text-white/50">{site.common.next}</span>
               <span className="font-semibold">{next.title}</span>
             </span>
             <span className="text-xl">→</span>

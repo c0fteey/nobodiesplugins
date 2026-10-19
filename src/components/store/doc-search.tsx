@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { SearchIcon } from "lucide-react";
+import { site } from "@/lang/site";
 
 type DocHit = { slug: string; title: string; summary: string; productName: string | null };
 
@@ -23,8 +24,8 @@ export function DocSearch({ docs }: { docs: DocHit[] }) {
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search documentation, modules, or API references..."
-        aria-label="Search documentation"
+        placeholder={site.docs.searchPlaceholder}
+        aria-label={site.docs.searchLabel}
         className="h-14 w-full rounded-lg border border-white/10 bg-white/5 pr-4 pl-11 text-sm outline-none backdrop-blur placeholder:text-white/40 focus:border-brand"
       />
       <AnimatePresence>
@@ -36,7 +37,7 @@ export function DocSearch({ docs }: { docs: DocHit[] }) {
             className="absolute inset-x-0 top-full z-20 mt-2 overflow-hidden rounded-lg border border-white/10 bg-[#1c1c1e] shadow-2xl"
           >
             {hits.length === 0 ? (
-              <li className="px-4 py-3 text-sm text-white/60">No pages found</li>
+              <li className="px-4 py-3 text-sm text-white/60">{site.docs.noResults}</li>
             ) : (
               hits.map((d) => (
                 <li key={d.slug}>
