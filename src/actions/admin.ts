@@ -1,0 +1,307 @@
+"use server";
+
+import { revalidatePath, updateTag } from "next/cache";
+import { and, eq, ne } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
+import {
+  campaigns,
+  contactMessages,
+  coupons,
+  docPages,
+  faqs,
+  partners,
+  products,
+  settings,
+  users,
+} from "@/db/schema";
+import { assertAdmin } from "@/lib/auth-guard";
+import {
+  campaignSchema,
+  couponSchema,
+  docSchema,
+  faqSchema,
+  partnerSchema,
+  productSchema,
+  settingsSchema,
+} from "@/lib/validations/store";
+
+export type AdminResult = { ok: true; id?: string } | { ok: false; error: string };
+
+const idSchema = z.uuid();
+const toCents = (euros: number) => Math.round(euros * 100);
+const list = (value: string) =>
+  value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+function fail(error: z.ZodError): AdminResult {
+  const issue = error.issues[0];
+  return { ok: false, error: issue ? `${issue.path.join(".") || "form"}: ${issue.message}` : "Invalid data" };
+}
+
+// Every admin mutation: auth check -> zod -> write -> invalidate public caches
+
+export async function saveProductAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = productSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+  const p = parsed.data;
+
+  const clash = await db.query.products.findFirst({
+    where: p.id ? and(eq(products.slug, p.slug), ne(products.id, p.id)) : eq(products.slug, p.slug),
+    columns: { id: true },
+  });
+  if (clash) return { ok: false, error: "Another product already uses this slug" };
+
+  const values = {
+    name: p.name,
+    slug: p.slug,
+    type: p.type,
+    parentId: p.type === "addon" ? (p.parentId ?? null) : null,
+    tagline: p.tagline || null,
+    shortDescription: p.shortDescription,
+    description: p.description,
+    priceCents: toCents(p.price),
+    compareAtCents: p.compareAt ? toCents(p.compareAt) : null,
+    badge: p.badge === "none" ? null : p.badge,
+    imageUrl: p.imageUrl,
+    downloadUrl: p.downloadUrl,
+    accentFrom: p.accentFrom,
+    accentTo: p.accentTo,
+    artTitle: p.artTitle || null,
+    tags: list(p.tags),
+    mcVersions: list(p.mcVersions),
+    version: p.version,
+    featured: p.featured,
+    published: p.published,
+    sortOrder: p.sortOrder,
+    bannerUrl: p.bannerUrl,
+    highlights: p.highlights,
+    content: p.content,
+    updatedAt: new Date(),
+  };
+
+  let id = p.id;
+  if (id) {
+    await db.update(products).set(values).where(eq(products.id, id));
+  } else {
+    const [row] = await db.insert(products).values(values).returning({ id: products.id });
+    id = row.id;
+  }
+
+  updateTag("products");
+  revalidatePath("/admin", "layout");
+  return { ok: true, id };
+}
+
+export async function deleteProductAction(id: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid id" };
+
+  try {
+    await db.delete(products).where(eq(products.id, parsed.data));
+  } catch {
+    // order_item references products with ON DELETE RESTRICT
+    return { ok: false, error: "This product has orders. Unpublish it instead of deleting." };
+  }
+  updateTag("products");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function saveDocAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = docSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+  const { id, ...doc } = parsed.data;
+
+  const clash = await db.query.docPages.findFirst({
+    where: id ? and(eq(docPages.slug, doc.slug), ne(docPages.id, id)) : eq(docPages.slug, doc.slug),
+    columns: { id: true },
+  });
+  if (clash) return { ok: false, error: "Another page already uses this slug" };
+
+  const values = { ...doc, productId: doc.productId ?? null, updatedAt: new Date() };
+  let savedId = id;
+  if (id) {
+    await db.update(docPages).set(values).where(eq(docPages.id, id));
+  } else {
+    const [row] = await db.insert(docPages).values(values).returning({ id: docPages.id });
+    savedId = row.id;
+  }
+  updateTag("docs");
+  revalidatePath("/admin", "layout");
+  return { ok: true, id: savedId };
+}
+
+export async function deleteDocAction(id: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  await db.delete(docPages).where(eq(docPages.id, parsed.data));
+  updateTag("docs");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function saveFaqAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = faqSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+  const { id, ...faq } = parsed.data;
+
+  if (id) await db.update(faqs).set(faq).where(eq(faqs.id, id));
+  else await db.insert(faqs).values(faq);
+  updateTag("faqs");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function deleteFaqAction(id: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  await db.delete(faqs).where(eq(faqs.id, parsed.data));
+  updateTag("faqs");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function savePartnerAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = partnerSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+  const { id, ...partner } = parsed.data;
+
+  if (id) await db.update(partners).set(partner).where(eq(partners.id, id));
+  else await db.insert(partners).values(partner);
+  updateTag("partners");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function deletePartnerAction(id: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  await db.delete(partners).where(eq(partners.id, parsed.data));
+  updateTag("partners");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function saveSettingsAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = settingsSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+
+  await db
+    .insert(settings)
+    .values({ key: "site", value: parsed.data })
+    .onConflictDoUpdate({ target: settings.key, set: { value: parsed.data } });
+  updateTag("settings");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function setUserRoleAction(input: unknown): Promise<AdminResult> {
+  const admin = await assertAdmin();
+  const parsed = z.object({ userId: z.uuid(), role: z.enum(["user", "admin"]) }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid data" };
+  if (parsed.data.userId === admin.id) return { ok: false, error: "You can't change your own role" };
+
+  await db.update(users).set({ role: parsed.data.role }).where(eq(users.id, parsed.data.userId));
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function setMessageHandledAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = z.object({ id: z.uuid(), handled: z.boolean() }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid data" };
+
+  await db.update(contactMessages).set({ handled: parsed.data.handled }).where(eq(contactMessages.id, parsed.data.id));
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function saveCouponAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = couponSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+  const c = parsed.data;
+
+  let userId: string | null = null;
+  if (c.userEmail) {
+    const owner = await db.query.users.findFirst({ where: eq(users.email, c.userEmail), columns: { id: true } });
+    if (!owner) return { ok: false, error: `No account with email ${c.userEmail}` };
+    userId = owner.id;
+  }
+
+  const clash = await db.query.coupons.findFirst({
+    where: c.id ? and(eq(coupons.code, c.code), ne(coupons.id, c.id)) : eq(coupons.code, c.code),
+    columns: { id: true },
+  });
+  if (clash) return { ok: false, error: "Another coupon already uses this code" };
+
+  const values = {
+    code: c.code,
+    description: c.description,
+    type: c.type,
+    amount: c.type === "fixed" ? toCents(c.amount) : Math.round(c.amount),
+    minSubtotalCents: toCents(c.minSubtotal),
+    maxUses: c.maxUses,
+    perUserLimit: c.perUserLimit,
+    userId,
+    productIds: c.productIds,
+    creatorName: c.creatorName || null,
+    startsAt: c.startsAt,
+    expiresAt: c.expiresAt,
+    active: c.active,
+  };
+
+  let id = c.id;
+  if (id) await db.update(coupons).set(values).where(eq(coupons.id, id));
+  else id = (await db.insert(coupons).values(values).returning({ id: coupons.id }))[0].id;
+
+  revalidatePath("/admin", "layout");
+  revalidatePath("/dashboard", "layout");
+  return { ok: true, id };
+}
+
+export async function deleteCouponAction(id: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  await db.delete(coupons).where(eq(coupons.id, parsed.data));
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
+export async function saveCampaignAction(input: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = campaignSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error);
+  const { id, ...campaign } = parsed.data;
+
+  let savedId = id;
+  if (id) await db.update(campaigns).set(campaign).where(eq(campaigns.id, id));
+  else savedId = (await db.insert(campaigns).values(campaign).returning({ id: campaigns.id }))[0].id;
+
+  updateTag("campaigns");
+  revalidatePath("/admin", "layout");
+  return { ok: true, id: savedId };
+}
+
+export async function deleteCampaignAction(id: unknown): Promise<AdminResult> {
+  await assertAdmin();
+  const parsed = idSchema.safeParse(id);
+  if (!parsed.success) return { ok: false, error: "Invalid id" };
+  await db.delete(campaigns).where(eq(campaigns.id, parsed.data));
+  updateTag("campaigns");
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "wallpaper" ADD COLUMN "thumb_url" text NOT NULL;
